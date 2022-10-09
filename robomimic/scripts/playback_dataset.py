@@ -14,19 +14,19 @@ Args:
 
     n (int): if provided, stop after n trajectories are processed
 
-    use-obs (bool): if flag is provided, visualize trajectories with dataset 
+    use-obs (bool): if flag is provided, visualize trajectories with dataset
         image observations instead of simulator
 
-    use-actions (bool): if flag is provided, use open-loop action playback 
+    use-actions (bool): if flag is provided, use open-loop action playback
         instead of loading sim states
 
     render (bool): if flag is provided, use on-screen rendering during playback
-    
+
     video_path (str): if provided, render trajectories to this video file path
 
     video_skip (int): render frames to a video every @video_skip steps
 
-    render_image_names (str or [str]): camera name(s) / image observation(s) to 
+    render_image_names (str or [str]): camera name(s) / image observation(s) to
         use for rendering on-screen or to video
 
     first (bool): if flag is provided, use first frame of each episode for playback
@@ -72,6 +72,7 @@ from robomimic.envs.env_base import EnvBase, EnvType
 # Define default cameras to use for each env type
 DEFAULT_CAMERAS = {
     EnvType.ROBOSUITE_TYPE: ["agentview"],
+    EnvType.FURNITURE_TYPE: ["frontview"],
     EnvType.IG_MOMART_TYPE: ["rgb"],
     EnvType.GYM_TYPE: ValueError("No camera names supported for gym type env!"),
 }
@@ -297,6 +298,8 @@ def playback_dataset(args):
             camera_names=args.render_image_names,
             first=args.first,
         )
+
+        print(env.is_success())
 
     f.close()
     if write_video:

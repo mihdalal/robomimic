@@ -20,9 +20,17 @@ import torch.nn.functional as F
 
 import robomimic.utils.obs_utils as ObsUtils
 import robomimic.utils.tensor_utils as TensorUtils
-from robomimic.models.base_nets import (MLP, FeatureAggregator, Module,
-                                        Randomizer, ResNet18Conv, RNN_Base,
-                                        Sequential, SpatialSoftmax, VisualCore)
+from robomimic.models.base_nets import (
+    MLP,
+    FeatureAggregator,
+    Module,
+    Randomizer,
+    ResNet18Conv,
+    RNN_Base,
+    Sequential,
+    SpatialSoftmax,
+    VisualCore,
+)
 from robomimic.utils.python_utils import extract_class_init_kwargs_from_dict
 
 

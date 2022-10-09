@@ -44,6 +44,10 @@ def get_env_class(env_meta=None, env_type=None, env=None):
         from robomimic.envs.env_ig_momart import EnvGibsonMOMART
 
         return EnvGibsonMOMART
+    elif env_type == EB.EnvType.FURNITURE_TYPE:
+        from assembly.env_furniture import EnvFurniture
+
+        return EnvFurniture
     raise Exception("code should never reach this point")
 
 
@@ -189,7 +193,14 @@ def create_env_from_metadata(
         env_name = env_meta["env_name"]
     env_type = get_env_type(env_meta=env_meta)
     env_kwargs = env_meta["env_kwargs"]
-
+    if "render" in env_kwargs:
+        del env_kwargs["render"]
+    if "render_offscreen" in env_kwargs:
+        del env_kwargs["render_offscreen"]
+    if "use_image_obs" in env_kwargs:
+        del env_kwargs["use_image_obs"]
+    if "postprocess_visual_obs" in env_kwargs:
+        del env_kwargs["postprocess_visual_obs"]
     env = create_env(
         env_type=env_type,
         env_name=env_name,

@@ -11,8 +11,7 @@ import torch
 import robomimic.utils.obs_utils as ObsUtils
 import robomimic.utils.tensor_utils as TensorUtils
 from robomimic.models.base_nets import CropRandomizer
-from robomimic.models.obs_nets import (MLP, ObservationDecoder,
-                                       ObservationEncoder)
+from robomimic.models.obs_nets import MLP, ObservationDecoder, ObservationEncoder
 
 
 def simple_obs_example():

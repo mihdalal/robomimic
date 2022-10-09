@@ -9,9 +9,14 @@ import torch
 
 import robomimic.utils.obs_utils as ObsUtils
 import robomimic.utils.tensor_utils as TensorUtils
-from robomimic.algo import (GL_VAE, HBC, ValueAlgo, ValuePlanner,
-                            algo_name_to_factory_func,
-                            register_algo_factory_func)
+from robomimic.algo import (
+    GL_VAE,
+    HBC,
+    ValueAlgo,
+    ValuePlanner,
+    algo_name_to_factory_func,
+    register_algo_factory_func,
+)
 from robomimic.config.config import Config
 
 

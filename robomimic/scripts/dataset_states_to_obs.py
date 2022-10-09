@@ -10,7 +10,7 @@ Args:
 
     shaped (bool): if flag is set, use dense rewards
 
-    camera_names (str or [str]): camera name(s) to use for image observations. 
+    camera_names (str or [str]): camera name(s) to use for image observations.
         Leave out to not use image observations.
 
     camera_height (int): height of image observation.
@@ -25,10 +25,10 @@ Args:
     copy_dones (bool): if provided, copy dones from source file instead of inferring them
 
 Example usage:
-    
+
     # extract low-dimensional observations
     python dataset_states_to_obs.py --dataset /path/to/demo.hdf5 --output_name low_dim.hdf5 --done_mode 2
-    
+
     # extract 84x84 image observations
     python dataset_states_to_obs.py --dataset /path/to/demo.hdf5 --output_name image.hdf5 \
         --done_mode 2 --camera_names agentview robot0_eye_in_hand --camera_height 84 --camera_width 84
@@ -80,7 +80,7 @@ def extract_trajectory(
 
     traj = dict(
         obs=[],
-        next_obs=[],
+        # next_obs=[],
         rewards=[],
         dones=[],
         actions=np.array(actions),
@@ -116,7 +116,7 @@ def extract_trajectory(
 
         # collect transition
         traj["obs"].append(obs)
-        traj["next_obs"].append(next_obs)
+        # traj["next_obs"].append(next_obs)
         traj["rewards"].append(r)
         traj["dones"].append(done)
 
@@ -125,7 +125,7 @@ def extract_trajectory(
 
     # convert list of dict to dict of list for obs dictionaries (for convenient writes to hdf5 dataset)
     traj["obs"] = TensorUtils.list_of_flat_dict_to_dict_of_list(traj["obs"])
-    traj["next_obs"] = TensorUtils.list_of_flat_dict_to_dict_of_list(traj["next_obs"])
+    # traj["next_obs"] = TensorUtils.list_of_flat_dict_to_dict_of_list(traj["next_obs"])
 
     # list to numpy array
     for k in traj:
@@ -214,9 +214,7 @@ def dataset_states_to_obs(args):
             ep_data_grp.create_dataset(
                 "obs/{}".format(k), data=np.array(traj["obs"][k])
             )
-            ep_data_grp.create_dataset(
-                "next_obs/{}".format(k), data=np.array(traj["next_obs"][k])
-            )
+            # ep_data_grp.create_dataset("next_obs/{}".format(k), data=np.array(traj["next_obs"][k]))
 
         # episode metadata
         if is_robosuite_env:

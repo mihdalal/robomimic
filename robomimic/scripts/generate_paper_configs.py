@@ -23,8 +23,15 @@ import os
 
 import robomimic
 from robomimic import DATASET_REGISTRY
-from robomimic.config import (BCConfig, BCQConfig, Config, CQLConfig,
-                              HBCConfig, IRISConfig, config_factory)
+from robomimic.config import (
+    BCConfig,
+    BCQConfig,
+    Config,
+    CQLConfig,
+    HBCConfig,
+    IRISConfig,
+    config_factory,
+)
 
 
 def modify_config_for_default_low_dim_exp(config):
