@@ -4,8 +4,8 @@ These functions can be a useful debugging tool.
 """
 import numpy as np
 
-import robomimic.utils.tensor_utils as TensorUtils
 import robomimic.utils.obs_utils as ObsUtils
+import robomimic.utils.tensor_utils as TensorUtils
 
 
 def image_tensor_to_numpy(image):
@@ -19,9 +19,7 @@ def image_tensor_to_numpy(image):
     Returns:
         image (np.array): converted images of shape [..., H, W, C] and type uint8
     """
-    return TensorUtils.to_numpy(
-            ObsUtils.unprocess_image(image)
-        ).astype(np.uint8)
+    return TensorUtils.to_numpy(ObsUtils.unprocess_image(image)).astype(np.uint8)
 
 
 def image_to_disk(image, fname):

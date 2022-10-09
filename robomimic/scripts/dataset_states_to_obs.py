@@ -37,23 +37,24 @@ Example usage:
     python dataset_states_to_obs.py --dataset /path/to/demo.hdf5 --output_name image_dense_done_1.hdf5 \
         --done_mode 1 --dense --camera_names agentview robot0_eye_in_hand --camera_height 84 --camera_width 84
 """
-import os
-import json
-import h5py
 import argparse
-import numpy as np
+import json
+import os
 from copy import deepcopy
 
-import robomimic.utils.tensor_utils as TensorUtils
-import robomimic.utils.file_utils as FileUtils
+import h5py
+import numpy as np
+
 import robomimic.utils.env_utils as EnvUtils
+import robomimic.utils.file_utils as FileUtils
+import robomimic.utils.tensor_utils as TensorUtils
 from robomimic.envs.env_base import EnvBase
 
 
 def extract_trajectory(
-    env, 
-    initial_state, 
-    states, 
+    env,
+    initial_state,
+    states,
     actions,
     done_mode,
 ):
@@ -66,8 +67,8 @@ def extract_trajectory(
         initial_state (dict): initial simulation state to load
         states (np.array): array of simulation states to load to extract information
         actions (np.array): array of actions
-        done_mode (int): how to write done signal. If 0, done is 1 whenever s' is a 
-            success state. If 1, done is 1 at the end of each trajectory. 
+        done_mode (int): how to write done signal. If 0, done is 1 whenever s' is a
+            success state. If 1, done is 1 at the end of each trajectory.
             If 2, do both.
     """
     assert isinstance(env, EnvBase)
@@ -78,12 +79,12 @@ def extract_trajectory(
     obs = env.reset_to(initial_state)
 
     traj = dict(
-        obs=[], 
-        next_obs=[], 
-        rewards=[], 
-        dones=[], 
-        actions=np.array(actions), 
-        states=np.array(states), 
+        obs=[],
+        next_obs=[],
+        rewards=[],
+        dones=[],
+        actions=np.array(actions),
+        states=np.array(states),
         initial_state_dict=initial_state,
     )
     traj_len = states.shape[0]
@@ -96,7 +97,7 @@ def extract_trajectory(
             next_obs, _, _, _ = env.step(actions[t - 1])
         else:
             # reset to simulator state to get observation
-            next_obs = env.reset_to({"states" : states[t]})
+            next_obs = env.reset_to({"states": states[t]})
 
         # infer reward signal
         # note: our tasks use reward r(s'), reward AFTER transition, so this is
@@ -144,9 +145,9 @@ def dataset_states_to_obs(args):
     env_meta = FileUtils.get_env_metadata_from_dataset(dataset_path=args.dataset)
     env = EnvUtils.create_env_for_data_processing(
         env_meta=env_meta,
-        camera_names=args.camera_names, 
-        camera_height=args.camera_height, 
-        camera_width=args.camera_width, 
+        camera_names=args.camera_names,
+        camera_height=args.camera_height,
+        camera_width=args.camera_width,
         reward_shaping=args.shaped,
     )
 
@@ -165,7 +166,7 @@ def dataset_states_to_obs(args):
 
     # maybe reduce the number of demonstrations to playback
     if args.n is not None:
-        demos = demos[:args.n]
+        demos = demos[: args.n]
 
     # output file in same directory as input file
     output_path = os.path.join(os.path.dirname(args.dataset), args.output_name)
@@ -187,9 +188,9 @@ def dataset_states_to_obs(args):
         # extract obs, rewards, dones
         actions = f["data/{}/actions".format(ep)][()]
         traj = extract_trajectory(
-            env=env, 
-            initial_state=initial_state, 
-            states=states, 
+            env=env,
+            initial_state=initial_state,
+            states=states,
             actions=actions,
             done_mode=args.done_mode,
         )
@@ -210,16 +211,27 @@ def dataset_states_to_obs(args):
         ep_data_grp.create_dataset("rewards", data=np.array(traj["rewards"]))
         ep_data_grp.create_dataset("dones", data=np.array(traj["dones"]))
         for k in traj["obs"]:
-            ep_data_grp.create_dataset("obs/{}".format(k), data=np.array(traj["obs"][k]))
-            ep_data_grp.create_dataset("next_obs/{}".format(k), data=np.array(traj["next_obs"][k]))
+            ep_data_grp.create_dataset(
+                "obs/{}".format(k), data=np.array(traj["obs"][k])
+            )
+            ep_data_grp.create_dataset(
+                "next_obs/{}".format(k), data=np.array(traj["next_obs"][k])
+            )
 
         # episode metadata
         if is_robosuite_env:
-            ep_data_grp.attrs["model_file"] = traj["initial_state_dict"]["model"] # model xml for this episode
-        ep_data_grp.attrs["num_samples"] = traj["actions"].shape[0] # number of transitions in this episode
+            ep_data_grp.attrs["model_file"] = traj["initial_state_dict"][
+                "model"
+            ]  # model xml for this episode
+        ep_data_grp.attrs["num_samples"] = traj["actions"].shape[
+            0
+        ]  # number of transitions in this episode
         total_samples += traj["actions"].shape[0]
-        print("ep {}: wrote {} transitions to group {}".format(ind, ep_data_grp.attrs["num_samples"], ep))
-
+        print(
+            "ep {}: wrote {} transitions to group {}".format(
+                ind, ep_data_grp.attrs["num_samples"], ep
+            )
+        )
 
     # copy over all filter keys that exist in the original hdf5
     if "mask" in f:
@@ -227,7 +239,9 @@ def dataset_states_to_obs(args):
 
     # global metadata
     data_grp.attrs["total"] = total_samples
-    data_grp.attrs["env_args"] = json.dumps(env.serialize(), indent=4) # environment info
+    data_grp.attrs["env_args"] = json.dumps(
+        env.serialize(), indent=4
+    )  # environment info
     print("Wrote {} trajectories to {}".format(len(demos), output_path))
 
     f.close()
@@ -261,8 +275,8 @@ if __name__ == "__main__":
 
     # flag for reward shaping
     parser.add_argument(
-        "--shaped", 
-        action='store_true',
+        "--shaped",
+        action="store_true",
         help="(optional) use shaped rewards",
     )
 
@@ -270,7 +284,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--camera_names",
         type=str,
-        nargs='+',
+        nargs="+",
         default=[],
         help="(optional) camera name(s) to use for image observations. Leave out to not use image observations.",
     )
@@ -289,8 +303,8 @@ if __name__ == "__main__":
         help="(optional) width of image observations",
     )
 
-    # specifies how the "done" signal is written. If "0", then the "done" signal is 1 wherever 
-    # the transition (s, a, s') has s' in a task completion state. If "1", the "done" signal 
+    # specifies how the "done" signal is written. If "0", then the "done" signal is 1 wherever
+    # the transition (s, a, s') has s' in a task completion state. If "1", the "done" signal
     # is one at the end of every trajectory. If "2", the "done" signal is 1 at task completion
     # states for successful trajectories and 1 at the end of all trajectories.
     parser.add_argument(
@@ -303,15 +317,15 @@ if __name__ == "__main__":
 
     # flag for copying rewards from source file instead of re-writing them
     parser.add_argument(
-        "--copy_rewards", 
-        action='store_true',
+        "--copy_rewards",
+        action="store_true",
         help="(optional) copy rewards from source file instead of inferring them",
     )
 
     # flag for copying dones from source file instead of re-writing them
     parser.add_argument(
-        "--copy_dones", 
-        action='store_true',
+        "--copy_dones",
+        action="store_true",
         help="(optional) copy dones from source file instead of inferring them",
     )
 

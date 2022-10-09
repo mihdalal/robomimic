@@ -16,13 +16,13 @@ Example usage:
     python convert_robosuite.py --dataset /path/to/your/demo.hdf5
 """
 
-import h5py
-import json
 import argparse
+import json
+
+import h5py
 
 import robomimic.envs.env_base as EB
 from robomimic.scripts.split_train_val import split_train_val_from_hdf5
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    f = h5py.File(args.dataset, "a") # edit mode
+    f = h5py.File(args.dataset, "a")  # edit mode
 
     # store env meta
     env_name = f["data"].attrs["env"]

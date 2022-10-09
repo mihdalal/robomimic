@@ -3,23 +3,22 @@ Contains torch Modules that correspond to basic network building blocks, like
 MLP, RNN, and CNN backbones.
 """
 
-import sys
-import math
 import abc
-import numpy as np
+import math
+import sys
 import textwrap
-from copy import deepcopy
 from collections import OrderedDict
+from copy import deepcopy
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import models as vision_models
 
-import robomimic.utils.tensor_utils as TensorUtils
 import robomimic.utils.obs_utils as ObsUtils
+import robomimic.utils.tensor_utils as TensorUtils
 from robomimic.utils.python_utils import extract_class_init_kwargs_from_dict
-
 
 CONV_ACTIVATIONS = {
     "relu": nn.ReLU,
@@ -47,14 +46,15 @@ class Module(torch.nn.Module):
     Base class for networks. The only difference from torch.nn.Module is that it
     requires implementing @output_shape.
     """
+
     @abc.abstractmethod
     def output_shape(self, input_shape=None):
         """
-        Function to compute output shape from inputs to this module. 
+        Function to compute output shape from inputs to this module.
 
         Args:
             input_shape (iterable of int): shape of input. Does not include batch dimension.
-                Some modules may not need this argument, if their output does not depend 
+                Some modules may not need this argument, if their output does not depend
                 on the size of the input, or if they assume fixed size input.
 
         Returns:
@@ -67,6 +67,7 @@ class Sequential(torch.nn.Sequential, Module):
     """
     Compose multiple Modules together (defined above).
     """
+
     def __init__(self, *args):
         for arg in args:
             assert isinstance(arg, Module)
@@ -74,11 +75,11 @@ class Sequential(torch.nn.Sequential, Module):
 
     def output_shape(self, input_shape=None):
         """
-        Function to compute output shape from inputs to this module. 
+        Function to compute output shape from inputs to this module.
 
         Args:
             input_shape (iterable of int): shape of input. Does not include batch dimension.
-                Some modules may not need this argument, if their output does not depend 
+                Some modules may not need this argument, if their output does not depend
                 on the size of the input, or if they assume fixed size input.
 
         Returns:
@@ -95,6 +96,7 @@ class Parameter(Module):
     A class that is a thin wrapper around a torch.nn.Parameter to make for easy saving
     and optimization.
     """
+
     def __init__(self, init_tensor):
         """
         Args:
@@ -105,11 +107,11 @@ class Parameter(Module):
 
     def output_shape(self, input_shape=None):
         """
-        Function to compute output shape from inputs to this module. 
+        Function to compute output shape from inputs to this module.
 
         Args:
             input_shape (iterable of int): shape of input. Does not include batch dimension.
-                Some modules may not need this argument, if their output does not depend 
+                Some modules may not need this argument, if their output does not depend
                 on the size of the input, or if they assume fixed size input.
 
         Returns:
@@ -128,13 +130,18 @@ class Unsqueeze(Module):
     """
     Trivial class that unsqueezes the input. Useful for including in a nn.Sequential network
     """
+
     def __init__(self, dim):
         super(Unsqueeze, self).__init__()
         self.dim = dim
 
     def output_shape(self, input_shape=None):
         assert input_shape is not None
-        return input_shape + [1] if self.dim == -1 else input_shape[:self.dim + 1] + [1] + input_shape[self.dim + 1:]
+        return (
+            input_shape + [1]
+            if self.dim == -1
+            else input_shape[: self.dim + 1] + [1] + input_shape[self.dim + 1 :]
+        )
 
     def forward(self, x):
         return x.unsqueeze(dim=self.dim)
@@ -151,7 +158,11 @@ class Squeeze(Module):
 
     def output_shape(self, input_shape=None):
         assert input_shape is not None
-        return input_shape[:self.dim] + input_shape[self.dim+1:] if input_shape[self.dim] == 1 else input_shape
+        return (
+            input_shape[: self.dim] + input_shape[self.dim + 1 :]
+            if input_shape[self.dim] == 1
+            else input_shape
+        )
 
     def forward(self, x):
         return x.squeeze(dim=self.dim)
@@ -161,6 +172,7 @@ class MLP(Module):
     """
     Base class for simple Multi-Layer Perceptrons.
     """
+
     def __init__(
         self,
         input_dim,
@@ -200,13 +212,13 @@ class MLP(Module):
         if layer_func_kwargs is None:
             layer_func_kwargs = dict()
         if dropouts is not None:
-            assert(len(dropouts) == len(layer_dims))
+            assert len(dropouts) == len(layer_dims)
         for i, l in enumerate(layer_dims):
             layers.append(layer_func(dim, l, **layer_func_kwargs))
             if normalization:
                 layers.append(nn.LayerNorm(l))
             layers.append(activation())
-            if dropouts is not None and dropouts[i] > 0.:
+            if dropouts is not None and dropouts[i] > 0.0:
                 layers.append(nn.Dropout(dropouts[i]))
             dim = l
         layers.append(layer_func(dim, output_dim))
@@ -225,11 +237,11 @@ class MLP(Module):
 
     def output_shape(self, input_shape=None):
         """
-        Function to compute output shape from inputs to this module. 
+        Function to compute output shape from inputs to this module.
 
         Args:
             input_shape (iterable of int): shape of input. Does not include batch dimension.
-                Some modules may not need this argument, if their output does not depend 
+                Some modules may not need this argument, if their output does not depend
                 on the size of the input, or if they assume fixed size input.
 
         Returns:
@@ -249,13 +261,18 @@ class MLP(Module):
         act = None if self._act is None else self._act.__name__
         output_act = None if self._output_act is None else self._output_act.__name__
 
-        indent = ' ' * 4
+        indent = " " * 4
         msg = "input_dim={}\noutput_dim={}\nlayer_dims={}\nlayer_func={}\ndropout={}\nact={}\noutput_act={}".format(
-            self._input_dim, self._output_dim, self._layer_dims,
-            self._layer_func.__name__, self._dropouts, act, output_act
+            self._input_dim,
+            self._output_dim,
+            self._layer_dims,
+            self._layer_func.__name__,
+            self._dropouts,
+            act,
+            output_act,
         )
         msg = textwrap.indent(msg, indent)
-        msg = header + '(\n' + msg + '\n)'
+        msg = header + "(\n" + msg + "\n)"
         return msg
 
 
@@ -263,6 +280,7 @@ class RNN_Base(Module):
     """
     A wrapper class for a multi-step RNN and a per-step network.
     """
+
     def __init__(
         self,
         input_dim,
@@ -289,7 +307,9 @@ class RNN_Base(Module):
         super(RNN_Base, self).__init__()
         self.per_step_net = per_step_net
         if per_step_net is not None:
-            assert isinstance(per_step_net, Module), "RNN_Base: per_step_net is not instance of Module"
+            assert isinstance(
+                per_step_net, Module
+            ), "RNN_Base: per_step_net is not instance of Module"
 
         assert rnn_type in ["LSTM", "GRU"]
         rnn_cls = nn.LSTM if rnn_type == "LSTM" else nn.GRU
@@ -307,7 +327,9 @@ class RNN_Base(Module):
         self._hidden_dim = rnn_hidden_dim
         self._num_layers = rnn_num_layers
         self._rnn_type = rnn_type
-        self._num_directions = int(rnn_is_bidirectional) + 1 # 2 if bidirectional, 1 otherwise
+        self._num_directions = (
+            int(rnn_is_bidirectional) + 1
+        )  # 2 if bidirectional, 1 otherwise
 
     @property
     def rnn_type(self):
@@ -325,20 +347,24 @@ class RNN_Base(Module):
             hidden_state (torch.Tensor or tuple): returns hidden state tensor or tuple of hidden state tensors
                 depending on the RNN type
         """
-        h_0 = torch.zeros(self._num_layers * self._num_directions, batch_size, self._hidden_dim).to(device)
+        h_0 = torch.zeros(
+            self._num_layers * self._num_directions, batch_size, self._hidden_dim
+        ).to(device)
         if self._rnn_type == "LSTM":
-            c_0 = torch.zeros(self._num_layers * self._num_directions, batch_size, self._hidden_dim).to(device)
+            c_0 = torch.zeros(
+                self._num_layers * self._num_directions, batch_size, self._hidden_dim
+            ).to(device)
             return h_0, c_0
         else:
             return h_0
 
     def output_shape(self, input_shape):
         """
-        Function to compute output shape from inputs to this module. 
+        Function to compute output shape from inputs to this module.
 
         Args:
             input_shape (iterable of int): shape of input. Does not include batch dimension.
-                Some modules may not need this argument, if their output does not depend 
+                Some modules may not need this argument, if their output does not depend
                 on the size of the input, or if they assume fixed size input.
 
         Returns:
@@ -414,21 +440,24 @@ class RNN_Base(Module):
 Visual Backbone Networks
 ================================================
 """
+
+
 class ConvBase(Module):
     """
     Base class for ConvNets.
     """
+
     def __init__(self):
         super(ConvBase, self).__init__()
 
     # dirty hack - re-implement to pass the buck onto subclasses from ABC parent
     def output_shape(self, input_shape):
         """
-        Function to compute output shape from inputs to this module. 
+        Function to compute output shape from inputs to this module.
 
         Args:
             input_shape (iterable of int): shape of input. Does not include batch dimension.
-                Some modules may not need this argument, if their output does not depend 
+                Some modules may not need this argument, if their output does not depend
                 on the size of the input, or if they assume fixed size input.
 
         Returns:
@@ -439,8 +468,12 @@ class ConvBase(Module):
     def forward(self, inputs):
         x = self.nets(inputs)
         if list(self.output_shape(list(inputs.shape)[1:])) != list(x.shape)[1:]:
-            raise ValueError('Size mismatch: expect size %s, but got size %s' % (
-                str(self.output_shape(list(inputs.shape)[1:])), str(list(x.shape)[1:]))
+            raise ValueError(
+                "Size mismatch: expect size %s, but got size %s"
+                % (
+                    str(self.output_shape(list(inputs.shape)[1:])),
+                    str(list(x.shape)[1:]),
+                )
             )
         return x
 
@@ -449,6 +482,7 @@ class ResNet18Conv(ConvBase):
     """
     A ResNet18 block that can be used to process input images.
     """
+
     def __init__(
         self,
         input_channel=3,
@@ -468,9 +502,13 @@ class ResNet18Conv(ConvBase):
         net = vision_models.resnet18(pretrained=pretrained)
 
         if input_coord_conv:
-            net.conv1 = CoordConv2d(input_channel, 64, kernel_size=7, stride=2, padding=3, bias=False)
+            net.conv1 = CoordConv2d(
+                input_channel, 64, kernel_size=7, stride=2, padding=3, bias=False
+            )
         elif input_channel != 3:
-            net.conv1 = nn.Conv2d(input_channel, 64, kernel_size=7, stride=2, padding=3, bias=False)
+            net.conv1 = nn.Conv2d(
+                input_channel, 64, kernel_size=7, stride=2, padding=3, bias=False
+            )
 
         # cut the last fc layer
         self._input_coord_conv = input_coord_conv
@@ -479,25 +517,27 @@ class ResNet18Conv(ConvBase):
 
     def output_shape(self, input_shape):
         """
-        Function to compute output shape from inputs to this module. 
+        Function to compute output shape from inputs to this module.
 
         Args:
             input_shape (iterable of int): shape of input. Does not include batch dimension.
-                Some modules may not need this argument, if their output does not depend 
+                Some modules may not need this argument, if their output does not depend
                 on the size of the input, or if they assume fixed size input.
 
         Returns:
             out_shape ([int]): list of integers corresponding to output shape
         """
-        assert(len(input_shape) == 3)
-        out_h = int(math.ceil(input_shape[1] / 32.))
-        out_w = int(math.ceil(input_shape[2] / 32.))
+        assert len(input_shape) == 3
+        out_h = int(math.ceil(input_shape[1] / 32.0))
+        out_w = int(math.ceil(input_shape[2] / 32.0))
         return [512, out_h, out_w]
 
     def __repr__(self):
         """Pretty print network."""
-        header = '{}'.format(str(self.__class__.__name__))
-        return header + '(input_channel={}, input_coord_conv={})'.format(self._input_channel, self._input_coord_conv)
+        header = "{}".format(str(self.__class__.__name__))
+        return header + "(input_channel={}, input_coord_conv={})".format(
+            self._input_channel, self._input_coord_conv
+        )
 
 
 class CoordConv2d(nn.Conv2d, Module):
@@ -508,6 +548,7 @@ class CoordConv2d(nn.Conv2d, Module):
     https://arxiv.org/abs/1807.03247
     (e.g. adds 2 channels per input feature map corresponding to (x, y) location on map)
     """
+
     def __init__(
         self,
         in_channels,
@@ -518,8 +559,8 @@ class CoordConv2d(nn.Conv2d, Module):
         dilation=1,
         groups=1,
         bias=True,
-        padding_mode='zeros',
-        coord_encoding='position',
+        padding_mode="zeros",
+        coord_encoding="position",
     ):
         """
         Args:
@@ -535,13 +576,17 @@ class CoordConv2d(nn.Conv2d, Module):
             coord_encoding: type of coordinate encoding. currently only 'position' is implemented
         """
 
-        assert(coord_encoding in ['position'])
+        assert coord_encoding in ["position"]
         self.coord_encoding = coord_encoding
-        if coord_encoding == 'position':
+        if coord_encoding == "position":
             in_channels += 2  # two extra channel for positional encoding
             self._position_enc = None  # position encoding
         else:
-            raise Exception("CoordConv2d: coord encoding {} not implemented".format(self.coord_encoding))
+            raise Exception(
+                "CoordConv2d: coord encoding {} not implemented".format(
+                    self.coord_encoding
+                )
+            )
         nn.Conv2d.__init__(
             self,
             in_channels=in_channels,
@@ -552,16 +597,16 @@ class CoordConv2d(nn.Conv2d, Module):
             dilation=dilation,
             groups=groups,
             bias=bias,
-            padding_mode=padding_mode
+            padding_mode=padding_mode,
         )
 
     def output_shape(self, input_shape):
         """
-        Function to compute output shape from inputs to this module. 
+        Function to compute output shape from inputs to this module.
 
         Args:
             input_shape (iterable of int): shape of input. Does not include batch dimension.
-                Some modules may not need this argument, if their output does not depend 
+                Some modules may not need this argument, if their output does not depend
                 on the size of the input, or if they assume fixed size input.
 
         Returns:
@@ -573,7 +618,7 @@ class CoordConv2d(nn.Conv2d, Module):
 
     def forward(self, input):
         b, c, h, w = input.shape
-        if self.coord_encoding == 'position':
+        if self.coord_encoding == "position":
             if self._position_enc is None:
                 pos_y, pos_x = torch.meshgrid(torch.arange(h), torch.arange(w))
                 pos_y = pos_y.float().to(input.device) / float(h)
@@ -588,6 +633,7 @@ class ShallowConv(ConvBase):
     """
     A shallow convolutional encoder from https://rll.berkeley.edu/dsae/dsae.pdf
     """
+
     def __init__(self, input_channel=3, output_channel=32):
         super(ShallowConv, self).__init__()
         self._input_channel = input_channel
@@ -604,20 +650,20 @@ class ShallowConv(ConvBase):
 
     def output_shape(self, input_shape):
         """
-        Function to compute output shape from inputs to this module. 
+        Function to compute output shape from inputs to this module.
 
         Args:
             input_shape (iterable of int): shape of input. Does not include batch dimension.
-                Some modules may not need this argument, if their output does not depend 
+                Some modules may not need this argument, if their output does not depend
                 on the size of the input, or if they assume fixed size input.
 
         Returns:
             out_shape ([int]): list of integers corresponding to output shape
         """
-        assert(len(input_shape) == 3)
-        assert(input_shape[0] == self._input_channel)
-        out_h = int(math.floor(input_shape[1] / 2.))
-        out_w = int(math.floor(input_shape[2] / 2.))
+        assert len(input_shape) == 3
+        assert input_shape[0] == self._input_channel
+        out_h = int(math.floor(input_shape[1] / 2.0))
+        out_w = int(math.floor(input_shape[2] / 2.0))
         return [self._output_channel, out_h, out_w]
 
 
@@ -638,6 +684,7 @@ class Conv1dBase(Module):
                 kernel_size (list of int): Kernel sizes for each sequential Conv1d layer
                 stride (list of int): Stride sizes for each sequential Conv1d layer
     """
+
     def __init__(
         self,
         input_channel=1,
@@ -651,19 +698,21 @@ class Conv1dBase(Module):
 
         # Make sure out_channels and kernel_size are specified
         for kwarg in ("out_channels", "kernel_size"):
-            assert kwarg in conv_kwargs, f"{kwarg} must be specified in Conv1dBase kwargs!"
+            assert (
+                kwarg in conv_kwargs
+            ), f"{kwarg} must be specified in Conv1dBase kwargs!"
 
         # Generate network
         self.n_layers = len(conv_kwargs["out_channels"])
         layers = OrderedDict()
         for i in range(self.n_layers):
             layer_kwargs = {k: v[i] for k, v in conv_kwargs.items()}
-            layers[f'conv{i}'] = nn.Conv1d(
+            layers[f"conv{i}"] = nn.Conv1d(
                 in_channels=input_channel,
                 **layer_kwargs,
             )
             if activation is not None:
-                layers[f'act{i}'] = activation()
+                layers[f"act{i}"] = activation()
             input_channel = layer_kwargs["out_channels"]
 
         # Store network
@@ -685,14 +734,29 @@ class Conv1dBase(Module):
         for i in range(self.n_layers):
             net = getattr(self.nets, f"conv{i}")
             channels = net.out_channels
-            length = int((length + 2 * net.padding[0] - net.dilation[0] * (net.kernel_size[0] - 1) - 1) / net.stride[0]) + 1
+            length = (
+                int(
+                    (
+                        length
+                        + 2 * net.padding[0]
+                        - net.dilation[0] * (net.kernel_size[0] - 1)
+                        - 1
+                    )
+                    / net.stride[0]
+                )
+                + 1
+            )
         return [channels, length]
 
     def forward(self, inputs):
         x = self.nets(inputs)
         if list(self.output_shape(list(inputs.shape)[1:])) != list(x.shape)[1:]:
-            raise ValueError('Size mismatch: expect size %s, but got size %s' % (
-                str(self.output_shape(list(inputs.shape)[1:])), str(list(x.shape)[1:]))
+            raise ValueError(
+                "Size mismatch: expect size %s, but got size %s"
+                % (
+                    str(self.output_shape(list(inputs.shape)[1:])),
+                    str(list(x.shape)[1:]),
+                )
             )
         return x
 
@@ -702,6 +766,8 @@ class Conv1dBase(Module):
 Pooling Networks
 ================================================
 """
+
+
 class SpatialSoftmax(ConvBase):
     """
     Spatial Softmax Layer.
@@ -709,11 +775,12 @@ class SpatialSoftmax(ConvBase):
     Based on Deep Spatial Autoencoders for Visuomotor Learning by Finn et al.
     https://rll.berkeley.edu/dsae/dsae.pdf
     """
+
     def __init__(
         self,
         input_shape,
         num_kp=None,
-        temperature=1.,
+        temperature=1.0,
         learnable_temperature=False,
         output_variance=False,
         noise_std=0.0,
@@ -729,7 +796,7 @@ class SpatialSoftmax(ConvBase):
         """
         super(SpatialSoftmax, self).__init__()
         assert len(input_shape) == 3
-        self._in_c, self._in_h, self._in_w = input_shape # (C, H, W)
+        self._in_c, self._in_h, self._in_w = input_shape  # (C, H, W)
 
         if num_kp is not None:
             self.nets = torch.nn.Conv2d(self._in_c, num_kp, kernel_size=1)
@@ -743,51 +810,55 @@ class SpatialSoftmax(ConvBase):
 
         if self.learnable_temperature:
             # temperature will be learned
-            temperature = torch.nn.Parameter(torch.ones(1) * temperature, requires_grad=True)
-            self.register_parameter('temperature', temperature)
+            temperature = torch.nn.Parameter(
+                torch.ones(1) * temperature, requires_grad=True
+            )
+            self.register_parameter("temperature", temperature)
         else:
             # temperature held constant after initialization
-            temperature = torch.nn.Parameter(torch.ones(1) * temperature, requires_grad=False)
-            self.register_buffer('temperature', temperature)
+            temperature = torch.nn.Parameter(
+                torch.ones(1) * temperature, requires_grad=False
+            )
+            self.register_buffer("temperature", temperature)
 
         pos_x, pos_y = np.meshgrid(
-                np.linspace(-1., 1., self._in_w),
-                np.linspace(-1., 1., self._in_h)
-                )
+            np.linspace(-1.0, 1.0, self._in_w), np.linspace(-1.0, 1.0, self._in_h)
+        )
         pos_x = torch.from_numpy(pos_x.reshape(1, self._in_h * self._in_w)).float()
         pos_y = torch.from_numpy(pos_y.reshape(1, self._in_h * self._in_w)).float()
-        self.register_buffer('pos_x', pos_x)
-        self.register_buffer('pos_y', pos_y)
+        self.register_buffer("pos_x", pos_x)
+        self.register_buffer("pos_y", pos_y)
 
         self.kps = None
 
     def __repr__(self):
         """Pretty print network."""
         header = format(str(self.__class__.__name__))
-        return header + '(num_kp={}, temperature={}, noise={})'.format(
-            self._num_kp, self.temperature.item(), self.noise_std)
+        return header + "(num_kp={}, temperature={}, noise={})".format(
+            self._num_kp, self.temperature.item(), self.noise_std
+        )
 
     def output_shape(self, input_shape):
         """
-        Function to compute output shape from inputs to this module. 
+        Function to compute output shape from inputs to this module.
 
         Args:
             input_shape (iterable of int): shape of input. Does not include batch dimension.
-                Some modules may not need this argument, if their output does not depend 
+                Some modules may not need this argument, if their output does not depend
                 on the size of the input, or if they assume fixed size input.
 
         Returns:
             out_shape ([int]): list of integers corresponding to output shape
         """
-        assert(len(input_shape) == 3)
-        assert(input_shape[0] == self._in_c)
+        assert len(input_shape) == 3
+        assert input_shape[0] == self._in_c
         return [self._num_kp, 2]
 
     def forward(self, feature):
         """
-        Forward pass through spatial softmax layer. For each keypoint, a 2D spatial 
-        probability distribution is created using a softmax, where the support is the 
-        pixel locations. This distribution is used to compute the expected value of 
+        Forward pass through spatial softmax layer. For each keypoint, a 2D spatial
+        probability distribution is created using a softmax, where the support is the
+        pixel locations. This distribution is used to compute the expected value of
         the pixel location, which becomes a keypoint of dimension 2. K such keypoints
         are created.
 
@@ -796,9 +867,9 @@ class SpatialSoftmax(ConvBase):
                 keypoint variance of shape [B, K, 2, 2] corresponding to the covariance
                 under the 2D spatial softmax distribution
         """
-        assert(feature.shape[1] == self._in_c)
-        assert(feature.shape[2] == self._in_h)
-        assert(feature.shape[3] == self._in_w)
+        assert feature.shape[1] == self._in_c
+        assert feature.shape[2] == self._in_h
+        assert feature.shape[3] == self._in_w
         if self.nets is not None:
             feature = self.nets(feature)
 
@@ -820,14 +891,22 @@ class SpatialSoftmax(ConvBase):
 
         if self.output_variance:
             # treat attention as a distribution, and compute second-order statistics to return
-            expected_xx = torch.sum(self.pos_x * self.pos_x * attention, dim=1, keepdim=True)
-            expected_yy = torch.sum(self.pos_y * self.pos_y * attention, dim=1, keepdim=True)
-            expected_xy = torch.sum(self.pos_x * self.pos_y * attention, dim=1, keepdim=True)
+            expected_xx = torch.sum(
+                self.pos_x * self.pos_x * attention, dim=1, keepdim=True
+            )
+            expected_yy = torch.sum(
+                self.pos_y * self.pos_y * attention, dim=1, keepdim=True
+            )
+            expected_xy = torch.sum(
+                self.pos_x * self.pos_y * attention, dim=1, keepdim=True
+            )
             var_x = expected_xx - expected_x * expected_x
             var_y = expected_yy - expected_y * expected_y
             var_xy = expected_xy - expected_x * expected_y
             # stack to [B * K, 4] and then reshape to [B, K, 2, 2] where last 2 dims are covariance matrix
-            feature_covar = torch.cat([var_x, var_xy, var_xy, var_y], 1).reshape(-1, self._num_kp, 2, 2)
+            feature_covar = torch.cat([var_x, var_xy, var_xy, var_y], 1).reshape(
+                -1, self._num_kp, 2, 2
+            )
             feature_keypoints = (feature_keypoints, feature_covar)
 
         if isinstance(feature_keypoints, tuple):
@@ -842,24 +921,25 @@ class SpatialMeanPool(Module):
     Module that averages inputs across all spatial dimensions (dimension 2 and after),
     leaving only the batch and channel dimensions.
     """
+
     def __init__(self, input_shape):
         super(SpatialMeanPool, self).__init__()
-        assert len(input_shape) == 3 # [C, H, W]
+        assert len(input_shape) == 3  # [C, H, W]
         self.in_shape = input_shape
 
     def output_shape(self, input_shape=None):
         """
-        Function to compute output shape from inputs to this module. 
+        Function to compute output shape from inputs to this module.
 
         Args:
             input_shape (iterable of int): shape of input. Does not include batch dimension.
-                Some modules may not need this argument, if their output does not depend 
+                Some modules may not need this argument, if their output does not depend
                 on the size of the input, or if they assume fixed size input.
 
         Returns:
             out_shape ([int]): list of integers corresponding to output shape
         """
-        return list(self.in_shape[:1]) # [C, H, W] -> [C]
+        return list(self.in_shape[:1])  # [C, H, W] -> [C]
 
     def forward(self, inputs):
         """Forward pass - average across all dimensions except batch and channel."""
@@ -868,11 +948,12 @@ class SpatialMeanPool(Module):
 
 class FeatureAggregator(Module):
     """
-    Helpful class for aggregating features across a dimension. This is useful in 
+    Helpful class for aggregating features across a dimension. This is useful in
     practice when training models that break an input image up into several patches
-    since features can be extraced per-patch using the same encoder and then 
+    since features can be extraced per-patch using the same encoder and then
     aggregated using this module.
     """
+
     def __init__(self, dim=1, agg_type="avg"):
         super(FeatureAggregator, self).__init__()
         self.dim = dim
@@ -888,18 +969,18 @@ class FeatureAggregator(Module):
 
     def output_shape(self, input_shape):
         """
-        Function to compute output shape from inputs to this module. 
+        Function to compute output shape from inputs to this module.
 
         Args:
             input_shape (iterable of int): shape of input. Does not include batch dimension.
-                Some modules may not need this argument, if their output does not depend 
+                Some modules may not need this argument, if their output does not depend
                 on the size of the input, or if they assume fixed size input.
 
         Returns:
             out_shape ([int]): list of integers corresponding to output shape
         """
-        # aggregates on @self.dim, so it is removed from the output shape 
-        return list(input_shape[:self.dim]) + list(input_shape[self.dim+1:])
+        # aggregates on @self.dim, so it is removed from the output shape
+        return list(input_shape[: self.dim]) + list(input_shape[self.dim + 1 :])
 
     def forward(self, x):
         """Forward pooling pass."""
@@ -917,10 +998,13 @@ class FeatureAggregator(Module):
 Encoder Core Networks (Abstract class)
 ================================================
 """
+
+
 class EncoderCore(Module):
     """
     Abstract class used to categorize all cores used to encode observations
     """
+
     def __init__(self, input_shape):
         self.input_shape = input_shape
         super(EncoderCore, self).__init__()
@@ -945,11 +1029,14 @@ class EncoderCore(Module):
 Visual Core Networks (Backbone + Pool)
 ================================================
 """
+
+
 class VisualCore(EncoderCore, ConvBase):
     """
     A network block that combines a visual backbone network with optional pooling
     and linear layers.
     """
+
     def __init__(
         self,
         input_shape,
@@ -979,7 +1066,9 @@ class VisualCore(EncoderCore, ConvBase):
         backbone_kwargs["input_channel"] = input_shape[0]
 
         # extract only relevant kwargs for this specific backbone
-        backbone_kwargs = extract_class_init_kwargs_from_dict(cls=eval(backbone_class), dic=backbone_kwargs, copy=True)
+        backbone_kwargs = extract_class_init_kwargs_from_dict(
+            cls=eval(backbone_class), dic=backbone_kwargs, copy=True
+        )
 
         # visual backbone
         assert isinstance(backbone_class, str)
@@ -998,7 +1087,9 @@ class VisualCore(EncoderCore, ConvBase):
                 pool_kwargs = dict()
             # extract only relevant kwargs for this specific backbone
             pool_kwargs["input_shape"] = feat_shape
-            pool_kwargs = extract_class_init_kwargs_from_dict(cls=eval(pool_class), dic=pool_kwargs, copy=True)
+            pool_kwargs = extract_class_init_kwargs_from_dict(
+                cls=eval(pool_class), dic=pool_kwargs, copy=True
+            )
             self.pool = eval(pool_class)(**pool_kwargs)
             assert isinstance(self.pool, Module)
 
@@ -1022,11 +1113,11 @@ class VisualCore(EncoderCore, ConvBase):
 
     def output_shape(self, input_shape):
         """
-        Function to compute output shape from inputs to this module. 
+        Function to compute output shape from inputs to this module.
 
         Args:
             input_shape (iterable of int): shape of input. Does not include batch dimension.
-                Some modules may not need this argument, if their output does not depend 
+                Some modules may not need this argument, if their output does not depend
                 on the size of the input, or if they assume fixed size input.
 
         Returns:
@@ -1055,14 +1146,18 @@ class VisualCore(EncoderCore, ConvBase):
 
     def __repr__(self):
         """Pretty print network."""
-        header = '{}'.format(str(self.__class__.__name__))
-        msg = ''
-        indent = ' ' * 2
+        header = "{}".format(str(self.__class__.__name__))
+        msg = ""
+        indent = " " * 2
         msg += textwrap.indent(
-            "\ninput_shape={}\noutput_shape={}".format(self.input_shape, self.output_shape(self.input_shape)), indent)
+            "\ninput_shape={}\noutput_shape={}".format(
+                self.input_shape, self.output_shape(self.input_shape)
+            ),
+            indent,
+        )
         msg += textwrap.indent("\nbackbone_net={}".format(self.backbone), indent)
         msg += textwrap.indent("\npool_net={}".format(self.pool), indent)
-        msg = header + '(' + msg + '\n)'
+        msg = header + "(" + msg + "\n)"
         return msg
 
 
@@ -1071,11 +1166,14 @@ class VisualCore(EncoderCore, ConvBase):
 Scan Core Networks (Conv1D Sequential + Pool)
 ================================================
 """
+
+
 class ScanCore(EncoderCore, ConvBase):
     """
     A network block that combines a Conv1D backbone network with optional pooling
     and linear layers.
     """
+
     def __init__(
         self,
         input_shape,
@@ -1177,16 +1275,19 @@ class ScanCore(EncoderCore, ConvBase):
 
     def __repr__(self):
         """Pretty print network."""
-        header = '{}'.format(str(self.__class__.__name__))
-        msg = ''
-        indent = ' ' * 2
+        header = "{}".format(str(self.__class__.__name__))
+        msg = ""
+        indent = " " * 2
         msg += textwrap.indent(
-            "\ninput_shape={}\noutput_shape={}".format(self.input_shape, self.output_shape(self.input_shape)), indent)
+            "\ninput_shape={}\noutput_shape={}".format(
+                self.input_shape, self.output_shape(self.input_shape)
+            ),
+            indent,
+        )
         msg += textwrap.indent("\nbackbone_net={}".format(self.backbone), indent)
         msg += textwrap.indent("\npool_net={}".format(self.pool), indent)
-        msg = header + '(' + msg + '\n)'
+        msg = header + "(" + msg + "\n)"
         return msg
-
 
 
 """
@@ -1194,6 +1295,8 @@ class ScanCore(EncoderCore, ConvBase):
 Observation Randomizer Networks
 ================================================
 """
+
+
 class Randomizer(Module):
     """
     Base class for randomizer networks. Each randomizer should implement the @output_shape_in,
@@ -1202,6 +1305,7 @@ class Randomizer(Module):
     (usually processed by a @VisualCore instance). Note that the self.training property
     can be used to change the randomizer's behavior at train vs. test time.
     """
+
     def __init__(self):
         super(Randomizer, self).__init__()
 
@@ -1234,7 +1338,7 @@ class Randomizer(Module):
 
         Args:
             input_shape (iterable of int): shape of input. Does not include batch dimension.
-                Some modules may not need this argument, if their output does not depend 
+                Some modules may not need this argument, if their output does not depend
                 on the size of the input, or if they assume fixed size input.
 
         Returns:
@@ -1251,7 +1355,7 @@ class Randomizer(Module):
 
         Args:
             input_shape (iterable of int): shape of input. Does not include batch dimension.
-                Some modules may not need this argument, if their output does not depend 
+                Some modules may not need this argument, if their output does not depend
                 on the size of the input, or if they assume fixed size input.
 
         Returns:
@@ -1278,11 +1382,12 @@ class CropRandomizer(Randomizer):
     """
     Randomly sample crops at input, and then average across crop features at output.
     """
+
     def __init__(
         self,
         input_shape,
-        crop_height, 
-        crop_width, 
+        crop_height,
+        crop_width,
         num_crops=1,
         pos_enc=False,
     ):
@@ -1297,7 +1402,7 @@ class CropRandomizer(Randomizer):
         """
         super(CropRandomizer, self).__init__()
 
-        assert len(input_shape) == 3 # (C, H, W)
+        assert len(input_shape) == 3  # (C, H, W)
         assert crop_height < input_shape[1]
         assert crop_width < input_shape[2]
 
@@ -1315,7 +1420,7 @@ class CropRandomizer(Randomizer):
 
         Args:
             input_shape (iterable of int): shape of input. Does not include batch dimension.
-                Some modules may not need this argument, if their output does not depend 
+                Some modules may not need this argument, if their output does not depend
                 on the size of the input, or if they assume fixed size input.
 
         Returns:
@@ -1336,13 +1441,13 @@ class CropRandomizer(Randomizer):
 
         Args:
             input_shape (iterable of int): shape of input. Does not include batch dimension.
-                Some modules may not need this argument, if their output does not depend 
+                Some modules may not need this argument, if their output does not depend
                 on the size of the input, or if they assume fixed size input.
 
         Returns:
             out_shape ([int]): list of integers corresponding to output shape
         """
-        
+
         # since the forward_out operation splits [B * N, ...] -> [B, N, ...]
         # and then pools to result in [B, ...], only the batch dimension changes,
         # and so the other dimensions retain their shape.
@@ -1353,11 +1458,11 @@ class CropRandomizer(Randomizer):
         Samples N random crops for each input in the batch, and then reshapes
         inputs to [B * N, ...].
         """
-        assert len(inputs.shape) >= 3 # must have at least (C, H, W) dimensions
+        assert len(inputs.shape) >= 3  # must have at least (C, H, W) dimensions
         out, _ = ObsUtils.sample_random_image_crops(
             images=inputs,
-            crop_height=self.crop_height, 
-            crop_width=self.crop_width, 
+            crop_height=self.crop_height,
+            crop_width=self.crop_width,
             num_crops=self.num_crops,
             pos_enc=self.pos_enc,
         )
@@ -1370,14 +1475,16 @@ class CropRandomizer(Randomizer):
         to result in shape [B, ...] to make sure the network output is consistent with
         what would have happened if there were no randomization.
         """
-        batch_size = (inputs.shape[0] // self.num_crops)
-        out = TensorUtils.reshape_dimensions(inputs, begin_axis=0, end_axis=0, 
-            target_dims=(batch_size, self.num_crops))
+        batch_size = inputs.shape[0] // self.num_crops
+        out = TensorUtils.reshape_dimensions(
+            inputs, begin_axis=0, end_axis=0, target_dims=(batch_size, self.num_crops)
+        )
         return out.mean(dim=1)
 
     def __repr__(self):
         """Pretty print network."""
-        header = '{}'.format(str(self.__class__.__name__))
+        header = "{}".format(str(self.__class__.__name__))
         msg = header + "(input_shape={}, crop_size=[{}, {}], num_crops={})".format(
-            self.input_shape, self.crop_height, self.crop_width, self.num_crops)
+            self.input_shape, self.crop_height, self.crop_width, self.num_crops
+        )
         return msg

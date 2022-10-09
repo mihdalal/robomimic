@@ -11,6 +11,7 @@ class EnvType:
     Holds environment types - one per environment class.
     These act as identifiers for different environments.
     """
+
     ROBOSUITE_TYPE = 1
     GYM_TYPE = 2
     IG_MOMART_TYPE = 3
@@ -18,14 +19,15 @@ class EnvType:
 
 class EnvBase(abc.ABC):
     """A base class method for environments used by this repo."""
+
     @abc.abstractmethod
     def __init__(
         self,
-        env_name, 
-        render=False, 
-        render_offscreen=False, 
-        use_image_obs=False, 
-        postprocess_visual_obs=True, 
+        env_name,
+        render=False,
+        render_offscreen=False,
+        use_image_obs=False,
+        postprocess_visual_obs=True,
         **kwargs,
     ):
         """
@@ -81,7 +83,7 @@ class EnvBase(abc.ABC):
 
         Args:
             state (dict): current simulator state
-        
+
         Returns:
             observation (dict): observation dictionary after setting the simulator state
         """
@@ -175,11 +177,13 @@ class EnvBase(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def create_for_data_processing(cls, camera_names, camera_height, camera_width, reward_shaping, **kwargs):
+    def create_for_data_processing(
+        cls, camera_names, camera_height, camera_width, reward_shaping, **kwargs
+    ):
         """
         Create environment for processing datasets, which includes extracting
         observations, labeling dense / sparse rewards, and annotating dones in
-        transitions. 
+        transitions.
 
         Args:
             camera_names ([str]): list of camera names that correspond to image observations
@@ -201,4 +205,3 @@ class EnvBase(abc.ABC):
         simulation computations.
         """
         return
-    

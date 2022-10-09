@@ -36,12 +36,8 @@ if __name__ == "__main__":
 
     # read external config from a dict
     ext_config = {
-        "train": {
-            "learning_rate": 1e-3
-        },
-        "algo": {
-            "actor_network_size": [1000, 1000]
-        }
+        "train": {"learning_rate": 1e-3},
+        "algo": {"actor_network_size": [1000, 1000]},
     }
     with config.values_unlocked():
         config.update(ext_config)
