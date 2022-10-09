@@ -12,7 +12,7 @@ Args:
 
     dataset (str): if provided, override the dataset path defined in the config
 
-    debug (bool): set this flag to run a quick training run for debugging purposes    
+    debug (bool): set this flag to run a quick training run for debugging purposes
 """
 
 import argparse
@@ -39,7 +39,7 @@ import robomimic.utils.train_utils as TrainUtils
 from robomimic.algo import RolloutPolicy, algo_factory
 from robomimic.config import config_factory
 from robomimic.utils.log_utils import DataLogger, PrintLogger
-
+import wandb
 
 def train(config, device):
     """
@@ -397,9 +397,20 @@ def main(args):
 
         # send output to a temporary directory
         config.train.output_dir = "/tmp/tmp_trained_models"
+        config.experiment.name = "test"
+        wandb_project_name = "test"
+    else:
+        wandb_project_name = args.wandb_project_name
 
     # lock config to prevent further modifications and ensure missing keys raise errors
     config.lock()
+
+    wandb.init(
+        project=wandb_project_name,
+        sync_tensorboard=True,
+        name=config.experiment.name,
+        config=config,
+    )
 
     # catch error during training and print it
     res_str = "finished run successfully!"
@@ -450,6 +461,11 @@ if __name__ == "__main__":
         "--debug",
         action="store_true",
         help="set this flag to run a quick training run for debugging purposes",
+    )
+
+    parser.add_argument(
+        "--wandb_project_name",
+        type=str,
     )
 
     args = parser.parse_args()
