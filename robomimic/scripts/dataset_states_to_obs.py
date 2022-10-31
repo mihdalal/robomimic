@@ -212,7 +212,7 @@ def dataset_states_to_obs(args):
         ep_data_grp.create_dataset("dones", data=np.array(traj["dones"]))
         for k in traj["obs"]:
             ep_data_grp.create_dataset(
-                "obs/{}".format(k), data=np.array(traj["obs"][k])
+                "obs/{}".format(k), data=np.array(traj["obs"][k]), compression="gzip"
             )
             # ep_data_grp.create_dataset("next_obs/{}".format(k), data=np.array(traj["next_obs"][k]))
 

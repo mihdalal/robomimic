@@ -1,5 +1,5 @@
 """
-Contains torch Modules that correspond to basic network building blocks, like 
+Contains torch Modules that correspond to basic network building blocks, like
 MLP, RNN, and CNN backbones.
 """
 
@@ -499,7 +499,7 @@ class ResNet18Conv(ConvBase):
                 (a convolution where input channels are modified to encode spatial pixel location)
         """
         super(ResNet18Conv, self).__init__()
-        net = vision_models.resnet18(pretrained=pretrained)
+        net = vision_models.resnet18(pretrained=pretrained).to(memory_format=torch.channels_last)
 
         if input_coord_conv:
             net.conv1 = CoordConv2d(
@@ -539,6 +539,8 @@ class ResNet18Conv(ConvBase):
             self._input_channel, self._input_coord_conv
         )
 
+    def forward(self, inputs):
+        return super().forward(inputs.to(memory_format=torch.channels_last))
 
 class CoordConv2d(nn.Conv2d, Module):
     """
