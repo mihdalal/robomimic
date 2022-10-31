@@ -85,6 +85,7 @@ class BC(PolicyAlgo):
             input_batch (dict): processed and filtered batch that
                 will be used for training
         """
+        batch["obs"] = ObsUtils.process_obs_dict(batch["obs"])
         input_batch = dict()
         input_batch["obs"] = {k: batch["obs"][k][:, 0, :] for k in batch["obs"]}
         input_batch["goal_obs"] = batch.get(
@@ -188,6 +189,7 @@ class BC(PolicyAlgo):
             net=self.nets["policy"],
             optim=self.optimizers["policy"],
             loss=losses["action_loss"],
+            max_grad_norm=self.algo_config.optim_params.policy.max_grad_norm,
         )
         info["policy_grad_norms"] = policy_grad_norms
         return info
@@ -516,6 +518,7 @@ class BC_RNN(BC):
             input_batch (dict): processed and filtered batch that
                 will be used for training
         """
+
         input_batch = dict()
         input_batch["obs"] = batch["obs"]
         input_batch["goal_obs"] = batch.get(
@@ -532,8 +535,9 @@ class BC_RNN(BC):
             input_batch["obs"] = TensorUtils.unsqueeze_expand_at(
                 obs_seq_start, size=n_steps, dim=1
             )
-
-        return TensorUtils.to_device(TensorUtils.to_float(input_batch), self.device)
+        input_batch = TensorUtils.to_float(TensorUtils.to_device(input_batch, self.device))
+        input_batch["obs"] = ObsUtils.process_obs_dict(input_batch["obs"])
+        return input_batch
 
     def get_action(self, obs_dict, goal_dict=None):
         """

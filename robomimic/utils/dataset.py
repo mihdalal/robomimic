@@ -590,7 +590,7 @@ class SequenceDataset(torch.utils.data.Dataset):
         seq = dict()
         for k in keys:
             data = self.get_dataset_for_ep(demo_id, k)
-            seq[k] = data[seq_begin_index:seq_end_index].astype("float32")
+            seq[k] = data[seq_begin_index:seq_end_index]
 
         seq = TensorUtils.pad_sequence(
             seq, padding=(seq_begin_pad, seq_end_pad), pad_same=True
@@ -639,7 +639,7 @@ class SequenceDataset(torch.utils.data.Dataset):
             obs["pad_mask"] = pad_mask
 
         # prepare image observations from dataset
-        return ObsUtils.process_obs_dict(obs)
+        return obs
 
     def get_dataset_sequence_from_demo(
         self, demo_id, index_in_demo, keys, seq_length=1

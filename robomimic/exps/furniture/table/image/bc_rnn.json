@@ -27,7 +27,7 @@
         "rollout": {
             "enabled": true,
             "n": 50,
-            "horizon": 800,
+            "horizon": 200,
             "rate": 25,
             "warmstart": 0,
             "terminate_on_success": true
@@ -51,8 +51,7 @@
         "cuda": true,
         "batch_size": 16,
         "num_epochs": 2000,
-        "seed": 1,
-        "max_grad_norm": 1
+        "seed": 1
     },
     "algo": {
         "optim_params": {
@@ -64,7 +63,8 @@
                 },
                 "regularization": {
                     "L2": 0.0
-                }
+                },
+                "max_grad_norm": 1
             }
         },
         "loss": {

@@ -151,6 +151,7 @@ def train(config, device):
         shuffle=(train_sampler is None),
         num_workers=config.train.num_data_workers,
         drop_last=True,
+        pin_memory=True,
     )
 
     if config.experiment.validate:

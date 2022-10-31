@@ -29,6 +29,7 @@ class BCConfig(BaseConfig):
         self.algo.optim_params.policy.regularization.L2 = (
             0.00  # L2 regularization strength
         )
+        self.algo.optim_params.policy.max_grad_norm = None # max gradient norm
 
         # loss weights
         self.algo.loss.l2_weight = 1.0  # L2 loss weight
