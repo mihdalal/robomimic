@@ -22,7 +22,7 @@ import robomimic.utils.tensor_utils as TensorUtils
 from robomimic.algo import RolloutPolicy
 from robomimic.envs.env_base import EnvBase
 from robomimic.utils.dataset import SequenceDataset
-
+import wandb
 
 def get_exp_dir(config, auto_remove_exp_dir=False):
     """
@@ -409,6 +409,10 @@ def rollout_with_stats(
         # close video writer that was used for all envs
         video_writer.close()
 
+    for k in envs:
+        wandb.log(
+            {f"{k}video": wandb.Video(video_paths[k], format="mp4")}
+        )
     return all_rollout_logs, video_paths
 
 

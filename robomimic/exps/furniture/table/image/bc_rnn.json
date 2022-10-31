@@ -10,7 +10,7 @@
         "save": {
             "enabled": true,
             "every_n_seconds": null,
-            "every_n_epochs": 50,
+            "every_n_epochs": 25,
             "epochs": [],
             "on_best_validation": false,
             "on_best_rollout_return": false,
@@ -28,7 +28,7 @@
             "enabled": true,
             "n": 50,
             "horizon": 800,
-            "rate": 50,
+            "rate": 25,
             "warmstart": 0,
             "terminate_on_success": true
         }
