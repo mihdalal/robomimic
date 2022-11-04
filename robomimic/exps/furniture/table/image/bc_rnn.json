@@ -36,7 +36,7 @@
     "train": {
         "data": "/home/mdalal/research/assembly/assembly/datasets/furniture_table_sawyer_1000_image.hdf5",
         "output_dir": "/home/mdalal/research/assembly/assembly/trained_models/",
-        "num_data_workers": 4,
+        "num_data_workers": 24,
         "hdf5_cache_mode": "low_dim",
         "hdf5_use_swmr": true,
         "hdf5_normalize_obs": false,
@@ -49,8 +49,8 @@
         ],
         "goal_mode": null,
         "cuda": true,
-        "batch_size": 16,
-        "num_epochs": 2000,
+        "batch_size": 100,
+        "num_epochs": 100000,
         "seed": 1
     },
     "algo": {
