@@ -135,7 +135,7 @@ def lr_scheduler_from_optim_params(net_optim_params, net, optimizer):
     return lr_scheduler
 
 
-def backprop_for_loss(net, optim, loss, max_grad_norm=None, retain_graph=False):
+def backprop_for_loss(net, optim, loss, max_grad_norm=None, retain_graph=False, scaler=None):
     """
     Backpropagate loss and update parameters for network with
     name @name.
@@ -154,13 +154,13 @@ def backprop_for_loss(net, optim, loss, max_grad_norm=None, retain_graph=False):
     Returns:
         grad_norms (float): average gradient norms from backpropagation
     """
-
     # backprop
-    optim.zero_grad()
-    loss.backward(retain_graph=retain_graph)
+    # loss.backward()
+    scaler.scale(loss).backward(retain_graph=retain_graph)
 
     # gradient clipping
     if max_grad_norm is not None:
+        scaler.unscale_(optim)
         torch.nn.utils.clip_grad_norm_(net.parameters(), max_grad_norm)
 
     # compute grad norms
@@ -171,7 +171,11 @@ def backprop_for_loss(net, optim, loss, max_grad_norm=None, retain_graph=False):
             grad_norms += p.grad.data.norm(2).pow(2).item()
 
     # step
-    optim.step()
+    scaler.step(optim)
+    scaler.update()
+    # optim.step()
+
+    optim.zero_grad(set_to_none=True)
 
     return grad_norms
 

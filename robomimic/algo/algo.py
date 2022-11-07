@@ -10,6 +10,7 @@ These factory functions are registered into a global dictionary with the
 import textwrap
 from collections import OrderedDict
 from copy import deepcopy
+import torch
 
 import torch.nn as nn
 
@@ -121,6 +122,7 @@ class Algo(object):
         self._create_shapes(obs_config.modalities, obs_key_shapes)
         self._create_networks()
         self._create_optimizers()
+        self.scaler = torch.cuda.amp.GradScaler()
         assert isinstance(self.nets, nn.ModuleDict)
 
     def _create_shapes(self, obs_keys, obs_key_shapes):

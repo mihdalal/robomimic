@@ -27,7 +27,7 @@
         "rollout": {
             "enabled": true,
             "n": 50,
-            "horizon": 300,
+            "horizon": 1200,
             "rate": 25,
             "warmstart": 0,
             "terminate_on_success": true
@@ -40,7 +40,7 @@
         "hdf5_cache_mode": "low_dim",
         "hdf5_use_swmr": true,
         "hdf5_normalize_obs": false,
-        "hdf5_filter_key": null,
+        "hdf5_filter_key": "filtered_1000",
         "seq_length": 10,
         "dataset_keys": [
             "actions",
@@ -49,7 +49,7 @@
         ],
         "goal_mode": null,
         "cuda": true,
-        "batch_size": 100,
+        "batch_size": 128,
         "num_epochs": 100000,
         "seed": 1
     },

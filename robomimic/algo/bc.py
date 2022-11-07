@@ -112,9 +112,10 @@ class BC(PolicyAlgo):
                 that might be relevant for logging
         """
         with TorchUtils.maybe_no_grad(no_grad=validate):
-            info = super(BC, self).train_on_batch(batch, epoch, validate=validate)
-            predictions = self._forward_training(batch)
-            losses = self._compute_losses(predictions, batch)
+            with torch.autocast(device_type='cuda', dtype=torch.float16):
+                info = super(BC, self).train_on_batch(batch, epoch, validate=validate)
+                predictions = self._forward_training(batch)
+                losses = self._compute_losses(predictions, batch)
 
             info["predictions"] = TensorUtils.detach(predictions)
             info["losses"] = TensorUtils.detach(losses)
@@ -190,6 +191,7 @@ class BC(PolicyAlgo):
             optim=self.optimizers["policy"],
             loss=losses["action_loss"],
             max_grad_norm=self.algo_config.optim_params.policy.max_grad_norm,
+            scaler=self.scaler
         )
         info["policy_grad_norms"] = policy_grad_norms
         return info
