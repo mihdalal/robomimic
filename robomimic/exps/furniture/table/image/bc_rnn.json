@@ -27,7 +27,7 @@
         "rollout": {
             "enabled": true,
             "n": 50,
-            "horizon": 200,
+            "horizon": 300,
             "rate": 25,
             "warmstart": 0,
             "terminate_on_success": true
