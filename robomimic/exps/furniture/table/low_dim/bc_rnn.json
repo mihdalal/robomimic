@@ -27,7 +27,7 @@
         "rollout": {
             "enabled": true,
             "n": 50,
-            "horizon": 800,
+            "horizon": 1200,
             "rate": 50,
             "warmstart": 0,
             "terminate_on_success": true
@@ -36,11 +36,11 @@
     "train": {
         "data": "/home/mdalal/research/assembly/assembly/datasets/furniture_table_sawyer_1000.hdf5",
         "output_dir": "/home/mdalal/research/assembly/assembly/trained_models/",
-        "num_data_workers": 0,
+        "num_data_workers": 24,
         "hdf5_cache_mode": "all",
         "hdf5_use_swmr": true,
         "hdf5_normalize_obs": false,
-        "hdf5_filter_key": null,
+        "hdf5_filter_key": "filtered_1000",
         "seq_length": 10,
         "dataset_keys": [
             "actions",
@@ -49,8 +49,8 @@
         ],
         "goal_mode": null,
         "cuda": true,
-        "batch_size": 100,
-        "num_epochs": 2000,
+        "batch_size": 128,
+        "num_epochs": 100000,
         "seed": 1
     },
     "algo": {
@@ -63,7 +63,8 @@
                 },
                 "regularization": {
                     "L2": 0.0
-                }
+                },
+                "max_grad_norm": 1
             }
         },
         "loss": {

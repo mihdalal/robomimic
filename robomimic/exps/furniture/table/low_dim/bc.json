@@ -1,7 +1,7 @@
 {
     "algo_name": "bc",
     "experiment": {
-        "name": "bc_mlp_furniture_table_sawyer_image",
+        "name": "bc_mlp_furniture_table_sawyer",
         "validate": false,
         "logging": {
             "terminal_output_to_txt": true,
@@ -10,14 +10,14 @@
         "save": {
             "enabled": true,
             "every_n_seconds": null,
-            "every_n_epochs": 25,
+            "every_n_epochs": 50,
             "epochs": [],
             "on_best_validation": false,
             "on_best_rollout_return": false,
             "on_best_rollout_success_rate": true
         },
         "epoch_every_n_steps": 1000,
-        "validation_epoch_every_n_steps": 50,
+        "validation_epoch_every_n_steps": 10,
         "env": null,
         "additional_envs": null,
         "render": false,
@@ -28,7 +28,7 @@
             "enabled": true,
             "n": 50,
             "horizon": 1200,
-            "rate": 25,
+            "rate": 50,
             "warmstart": 0,
             "terminate_on_success": true
         }
@@ -37,7 +37,7 @@
         "data": "/home/mdalal/research/assembly/assembly/datasets/furniture_table_sawyer_1000_image.hdf5",
         "output_dir": "/home/mdalal/research/assembly/assembly/trained_models/",
         "num_data_workers": 24,
-        "hdf5_cache_mode": "low_dim",
+        "hdf5_cache_mode": "all",
         "hdf5_use_swmr": true,
         "hdf5_normalize_obs": false,
         "hdf5_filter_key": "filtered_1000",
@@ -144,12 +144,10 @@
                 "low_dim": [
                     "eef_pos",
                     "eef_quat",
-                    "gripper_qpos"
+                    "gripper_qpos",
+                    "object"
                 ],
-                "rgb": [
-                    "agentview",
-                    "eye_in_hand"
-                ],
+                "rgb": [],
                 "depth": [],
                 "scan": []
             },
@@ -186,7 +184,7 @@
                         "output_variance": false
                     }
                 },
-                "obs_randomizer_class": "CropRandomizer",
+                "obs_randomizer_class": null,
                 "obs_randomizer_kwargs": {
                     "crop_height": 76,
                     "crop_width": 76,
