@@ -1146,7 +1146,7 @@ class RNNGaussianActorNetwork(RNNActorNetwork):
         self.low_noise_eval = low_noise_eval
         self.use_tanh = use_tanh
 
-        super(RNNGMMActorNetwork, self).__init__(
+        super(RNNGaussianActorNetwork, self).__init__(
             obs_shapes=obs_shapes,
             ac_dim=ac_dim,
             mlp_layer_dims=mlp_layer_dims,
