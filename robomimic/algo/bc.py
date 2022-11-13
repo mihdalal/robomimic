@@ -40,6 +40,8 @@ def algo_config_to_class(algo_config):
     if algo_config.rnn.enabled:
         if gmm_enabled:
             return BC_RNN_GMM, {}
+        if gaussian_enabled:
+            return BC_RNN_Gaussian, {}
         return BC_RNN, {}
     assert sum([gaussian_enabled, gmm_enabled, vae_enabled]) <= 1
     if gaussian_enabled:
@@ -684,3 +686,39 @@ class BC_RNN_GMM(BC_RNN):
         if "policy_grad_norms" in info:
             log["Policy_Grad_Norms"] = info["policy_grad_norms"]
         return log
+
+class BC_RNN_Gaussian(BC_RNN_GMM):
+    """
+    BC training with an RNN Gaussian policy.
+    """
+
+    def _create_networks(self):
+        """
+        Creates networks and places them into @self.nets.
+        """
+        assert self.algo_config.gaussian.enabled
+        assert self.algo_config.rnn.enabled
+
+        self.nets = nn.ModuleDict()
+        self.nets["policy"] = PolicyNets.RNNGaussianActorNetwork(
+            obs_shapes=self.obs_shapes,
+            goal_shapes=self.goal_shapes,
+            ac_dim=self.ac_dim,
+            mlp_layer_dims=self.algo_config.actor_layer_dims,
+            fixed_std=self.algo_config.gaussian.fixed_std,
+            init_std=self.algo_config.gaussian.init_std,
+            std_limits=(self.algo_config.gaussian.min_std, 7.5),
+            std_activation=self.algo_config.gaussian.std_activation,
+            low_noise_eval=self.algo_config.gaussian.low_noise_eval,
+            encoder_kwargs=ObsUtils.obs_encoder_kwargs_from_config(
+                self.obs_config.encoder
+            ),
+            **BaseNets.rnn_args_from_config(self.algo_config.rnn),
+        )
+
+        self._rnn_hidden_state = None
+        self._rnn_horizon = self.algo_config.rnn.horizon
+        self._rnn_counter = 0
+        self._rnn_is_open_loop = self.algo_config.rnn.get("open_loop", False)
+
+        self.nets = self.nets.float().to(self.device)

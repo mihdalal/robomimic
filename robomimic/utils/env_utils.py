@@ -164,6 +164,7 @@ def create_env_from_metadata(
     render=False,
     render_offscreen=False,
     use_image_obs=False,
+    return_flattened_obs=False,
 ):
     """
     Create environment.
@@ -207,6 +208,7 @@ def create_env_from_metadata(
         render=render,
         render_offscreen=render_offscreen,
         use_image_obs=use_image_obs,
+        return_flattened_obs=return_flattened_obs,
         **env_kwargs,
     )
     return env

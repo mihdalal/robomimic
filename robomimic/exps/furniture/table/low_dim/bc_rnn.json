@@ -34,7 +34,7 @@
         }
     },
     "train": {
-        "data": "/home/mdalal/research/assembly/assembly/datasets/furniture_table_sawyer_1000.hdf5",
+        "data": "/home/mdalal/research/assembly/assembly/datasets/furniture_table_sawyer_10000_image.hdf5",
         "output_dir": "/home/mdalal/research/assembly/assembly/trained_models/",
         "num_data_workers": 24,
         "hdf5_cache_mode": "all",

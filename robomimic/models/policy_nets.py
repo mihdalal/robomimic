@@ -1051,6 +1051,267 @@ class RNNGMMActorNetwork(RNNActorNetwork):
         )
         return msg
 
+class RNNGaussianActorNetwork(RNNActorNetwork):
+    """
+    An RNN Gaussian policy network that predicts sequences of action distributions from observation sequences.
+    """
+
+    def __init__(
+        self,
+        obs_shapes,
+        ac_dim,
+        mlp_layer_dims,
+        rnn_hidden_dim,
+        rnn_num_layers,
+        rnn_type="LSTM",  # [LSTM, GRU]
+        rnn_kwargs=None,
+        fixed_std=False,
+        std_activation="softplus",
+        init_std=0.3,
+        mean_limits=(-9.0, 9.0),
+        std_limits=(0.007, 7.5),
+        low_noise_eval=True,
+        use_tanh=False,
+        goal_shapes=None,
+        encoder_kwargs=None,
+    ):
+        """
+        Args:
+
+            rnn_hidden_dim (int): RNN hidden dimension
+
+            rnn_num_layers (int): number of RNN layers
+
+            rnn_type (str): [LSTM, GRU]
+
+            rnn_kwargs (dict): kwargs for the torch.nn.LSTM / GRU
+
+            num_modes (int): number of GMM modes
+
+            min_std (float): minimum std output from network
+
+            std_activation (None or str): type of activation to use for std deviation. Options are:
+
+                `'softplus'`: Softplus activation applied
+
+                `'exp'`: Exp applied; this corresponds to network output being interpreted as log_std instead of std
+
+            low_noise_eval (float): if True, model will sample from GMM with low std, so that
+                one of the GMM modes will be sampled (approximately)
+
+            use_tanh (bool): if True, use a tanh-Gaussian distribution
+
+            encoder_kwargs (dict or None): If None, results in default encoder_kwargs being applied. Otherwise, should
+                be nested dictionary containing relevant per-modality information for encoder networks.
+                Should be of form:
+
+                obs_modality1: dict
+                    feature_dimension: int
+                    core_class: str
+                    core_kwargs: dict
+                        ...
+                        ...
+                    obs_randomizer_class: str
+                    obs_randomizer_kwargs: dict
+                        ...
+                        ...
+                obs_modality2: dict
+                    ...
+        """
+
+        # parameters specific to Gaussian actor
+        self.fixed_std = fixed_std
+        self.init_std = init_std
+        self.mean_limits = np.array(mean_limits)
+        self.std_limits = np.array(std_limits)
+
+        # Define activations to use
+        def softplus_scaled(x):
+            out = F.softplus(x)
+            out = out * (self.init_std / F.softplus(torch.zeros(1).to(x.device)))
+            return out
+
+        self.activations = {
+            None: lambda x: x,
+            "softplus": softplus_scaled,
+            "exp": torch.exp,
+        }
+        assert (
+            std_activation in self.activations
+        ), "std_activation must be one of: {}; instead got: {}".format(
+            self.activations.keys(), std_activation
+        )
+        self.std_activation = std_activation if not self.fixed_std else None
+
+        self.low_noise_eval = low_noise_eval
+        self.use_tanh = use_tanh
+
+        super(RNNGMMActorNetwork, self).__init__(
+            obs_shapes=obs_shapes,
+            ac_dim=ac_dim,
+            mlp_layer_dims=mlp_layer_dims,
+            rnn_hidden_dim=rnn_hidden_dim,
+            rnn_num_layers=rnn_num_layers,
+            rnn_type=rnn_type,
+            rnn_kwargs=rnn_kwargs,
+            goal_shapes=goal_shapes,
+            encoder_kwargs=encoder_kwargs,
+        )
+
+    def _get_output_shapes(self):
+        """
+        Tells @MIMO_MLP superclass about the output dictionary that should be generated
+        at the last layer. Network outputs parameters of Gaussian distribution.
+        """
+        return OrderedDict(
+            mean=(self.ac_dim,),
+            scale=(self.ac_dim,),
+        )
+
+    def forward_train(
+        self, obs_dict, goal_dict=None, rnn_init_state=None, return_state=False
+    ):
+        """
+        Return full Gaussian distribution, which is useful for computing
+        quantities necessary at train-time, like log-likelihood, KL
+        divergence, etc.
+
+        Args:
+            obs_dict (dict): batch of observations
+            goal_dict (dict): if not None, batch of goal observations
+            rnn_init_state: rnn hidden state, initialize to zero state if set to None
+            return_state (bool): whether to return hidden state
+
+        Returns:
+            dists (Distribution): sequence of GMM distributions over the timesteps
+            rnn_state: return rnn state at the end if return_state is set to True
+        """
+        if self._is_goal_conditioned:
+            assert goal_dict is not None
+            # repeat the goal observation in time to match dimension with obs_dict
+            mod = list(obs_dict.keys())[0]
+            goal_dict = TensorUtils.unsqueeze_expand_at(
+                goal_dict, size=obs_dict[mod].shape[1], dim=1
+            )
+
+        outputs = RNN_MIMO_MLP.forward(
+            self,
+            obs=obs_dict,
+            goal=goal_dict,
+            rnn_init_state=rnn_init_state,
+            return_state=return_state,
+        )
+
+        if return_state:
+            outputs, state = outputs
+        else:
+            state = None
+
+        mean = outputs["mean"]
+        # Use either constant std or learned std depending on setting
+        scale = (
+            outputs["scale"]
+            if not self.fixed_std
+            else torch.ones_like(mean) * self.init_std
+        )
+
+        # Clamp the mean
+        mean = torch.clamp(mean, min=self.mean_limits[0], max=self.mean_limits[1])
+
+        # apply tanh squashing to mean if not using tanh-Gaussian to ensure mean is in [-1, 1]
+        if not self.use_tanh:
+            mean = torch.tanh(mean)
+
+        # Calculate scale
+        if self.low_noise_eval and (not self.training):
+            # override std value so that you always approximately sample the mean
+            scale = torch.ones_like(mean) * 1e-4
+        else:
+            # Post-process the scale accordingly
+            scale = self.activations[self.std_activation](scale)
+            # Clamp the scale
+            scale = torch.clamp(scale, min=self.std_limits[0], max=self.std_limits[1])
+
+        # the Independent call will make it so that `batch_shape` for dist will be equal to batch size
+        # while `event_shape` will be equal to action dimension - ensuring that log-probability
+        # computations are summed across the action dimension
+        dist = D.Normal(loc=mean, scale=scale)
+        dist = D.Independent(dist, 1)
+
+        if self.use_tanh:
+            # Wrap distribution with Tanh
+            dist = TanhWrappedDistribution(base_dist=dist, scale=1.0)
+
+        if return_state:
+            return dist, state
+        else:
+            return dist
+
+    def forward(
+        self, obs_dict, goal_dict=None, rnn_init_state=None, return_state=False
+    ):
+        """
+        Samples actions from the policy distribution.
+
+        Args:
+            obs_dict (dict): batch of observations
+            goal_dict (dict): if not None, batch of goal observations
+
+        Returns:
+            action (torch.Tensor): batch of actions from policy distribution
+        """
+        out = self.forward_train(
+            obs_dict=obs_dict,
+            goal_dict=goal_dict,
+            rnn_init_state=rnn_init_state,
+            return_state=return_state,
+        )
+        if return_state:
+            ad, state = out
+            if self.low_noise_eval and (not self.training):
+                if self.use_tanh:
+                    # # scaling factor lets us output actions like [-1. 1.] and is consistent with the distribution transform
+                    # return (1. + 1e-6) * torch.tanh(dist.base_dist.mean)
+                    return torch.tanh(ad.mean)
+                return ad.mean
+            return ad.sample(), state
+        if self.low_noise_eval and (not self.training):
+            if self.use_tanh:
+                # # scaling factor lets us output actions like [-1. 1.] and is consistent with the distribution transform
+                # return (1. + 1e-6) * torch.tanh(dist.base_dist.mean)
+                return torch.tanh(out.mean)
+            return out.mean
+        return out.sample()
+
+    def forward_train_step(self, obs_dict, goal_dict=None, rnn_state=None):
+        """
+        Unroll RNN over single timestep to get action GMM distribution, which
+        is useful for computing quantities necessary at train-time, like
+        log-likelihood, KL divergence, etc.
+
+        Args:
+            obs_dict (dict): batch of observations. Should not contain
+                time dimension.
+            goal_dict (dict): if not None, batch of goal observations
+            rnn_state: rnn hidden state, initialize to zero state if set to None
+
+        Returns:
+            ad (Distribution): Gaussian action distributions
+            state: updated rnn state
+        """
+        obs_dict = TensorUtils.to_sequence(obs_dict)
+        ad, state = self.forward_train(
+            obs_dict, goal_dict, rnn_init_state=rnn_state, return_state=True
+        )
+        # to squeeze time dimension, make another action distribution
+        assert ad.loc.shape[1] == 1
+        assert ad.scale.shape[1] == 1
+        ad = D.Normal(
+            loc = ad.loc.squeeze(1),
+            scale = ad.scale.squeeze(1),
+        )
+        return ad, state
+
 
 class VAEActor(Module):
     """
