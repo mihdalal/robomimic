@@ -34,7 +34,7 @@
         }
     },
     "train": {
-        "data": "/home/mdalal/research/assembly/assembly/datasets/furniture_table_sawyer_10000_image.hdf5",
+        "data": "/home/mdalal/research/assembly/assembly/datasets/furniture_table_sawyer_1000.hdf5",
         "output_dir": "/home/mdalal/research/assembly/assembly/trained_models/",
         "num_data_workers": 24,
         "hdf5_cache_mode": "all",
@@ -74,7 +74,7 @@
         },
         "actor_layer_dims": [],
         "gaussian": {
-            "enabled": false,
+            "enabled": true,
             "fixed_std": false,
             "init_std": 0.1,
             "min_std": 0.01,
@@ -82,7 +82,7 @@
             "low_noise_eval": true
         },
         "gmm": {
-            "enabled": true,
+            "enabled": false,
             "num_modes": 5,
             "min_std": 0.0001,
             "std_activation": "softplus",
