@@ -1272,8 +1272,8 @@ class RNNGaussianActorNetwork(RNNActorNetwork):
                 if self.use_tanh:
                     # # scaling factor lets us output actions like [-1. 1.] and is consistent with the distribution transform
                     # return (1. + 1e-6) * torch.tanh(dist.base_dist.mean)
-                    return torch.tanh(ad.mean)
-                return ad.mean
+                    return torch.tanh(ad.mean), state
+                return ad.mean, state
             return ad.sample(), state
         if self.low_noise_eval and (not self.training):
             if self.use_tanh:
