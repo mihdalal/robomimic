@@ -40,8 +40,8 @@ def algo_config_to_class(algo_config):
     if algo_config.rnn.enabled:
         if gmm_enabled:
             return BC_RNN_GMM, {}
-        if gaussian_enabled:
-            return BC_RNN_Gaussian, {}
+        # if gaussian_enabled:
+        #     return BC_RNN_Gaussian, {}
         return BC_RNN, {}
     assert sum([gaussian_enabled, gmm_enabled, vae_enabled]) <= 1
     if gaussian_enabled:
@@ -555,7 +555,6 @@ class BC_RNN(BC):
             action (torch.Tensor): action tensor
         """
         assert not self.nets.training
-
         if self._rnn_hidden_state is None or self._rnn_counter % self._rnn_horizon == 0:
             batch_size = list(obs_dict.values())[0].shape[0]
             self._rnn_hidden_state = self.nets["policy"].get_rnn_init_state(
