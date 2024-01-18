@@ -12,7 +12,6 @@ import robomimic.envs.env_base as EB
 import robomimic.utils.obs_utils as ObsUtils
 from neural_mp.envs import *
 
-import os
 import torch
 
 # Util function for loading point clouds|
@@ -20,19 +19,16 @@ import numpy as np
 
 # Data structures and functions for rendering
 from pytorch3d.structures import Pointclouds
-from pytorch3d.vis.plotly_vis import AxisArgs, plot_batch_individually, plot_scene
 from pytorch3d.renderer import (
     look_at_view_transform,
     FoVOrthographicCameras, 
     PointsRasterizationSettings,
     PointsRenderer,
-    PulsarPointsRenderer,
     PointsRasterizer,
     AlphaCompositor,
-    NormWeightedCompositor
 )
 
-from neural_mp.envs.franka_pybullet_env import depth_to_rgb, compute_full_pcd
+from neural_mp.envs.franka_pybullet_env import depth_to_rgb
 
 
 class EnvMP(EB.EnvBase):
@@ -156,11 +152,6 @@ class EnvMP(EB.EnvBase):
             if k.endswith('depth'):
                 ob_return[k] = depth_to_rgb(ob_return[k])
                 ob_return[k] = ob_return[k].transpose(2, 0, 1)
-            if 'pcd' in k:
-                ob_return[k] = compute_full_pcd(
-                    pcd_params=np.expand_dims(ob_return[k], axis=0),
-                    **self.pcd_params
-                )[0]
         return ob_return
 
     def get_state(self):

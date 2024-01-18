@@ -62,7 +62,8 @@ import argparse
 import imageio
 from matplotlib import pyplot as plt
 import numpy as np
-from neural_mp.envs.franka_pybullet_env import compute_full_pcd
+import torch
+from neural_mp.geometry import compute_full_pcd
 
 import robomimic
 from robomimic.envs.env_mp import render_pointcloud, render_single_pointcloud
@@ -193,7 +194,7 @@ def playback_trajectory_with_obs(
             if len(pcd_keys) > 0:
                 frames = []
                 for pcd_key in pcd_keys:
-                    pcd = compute_full_pcd(traj_grp[f'obs/{pcd_key}'][()][i:i+1], num_robot_points=2048, num_obstacle_points=4096)
+                    pcd = compute_full_pcd(torch.from_numpy(traj_grp[f'obs/{pcd_key}'][()][i:i+1]).unsqueeze(1).cuda(), num_robot_points=2048, num_obstacle_points=4096).cpu().numpy()[0]
                     frame = render_single_pointcloud(pcd[0])
                     frames.append(frame)
                 frame = np.concatenate(frames, axis=1)

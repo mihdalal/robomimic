@@ -14,6 +14,7 @@ import torch
 import torch.nn as nn
 from torchvision.transforms import Lambda, Compose
 import torchvision.transforms.functional as TVF
+from neural_mp.geometry import compute_full_pcd
 
 import robomimic.models.base_nets as BaseNets
 import robomimic.utils.tensor_utils as TensorUtils
@@ -24,7 +25,6 @@ from robomimic.utils.python_utils import extract_class_init_kwargs_from_dict
 from robomimic.models.base_nets import *
 from robomimic.utils.vis_utils import visualize_image_randomizer
 from robomimic.macros import VISUALIZE_RANDOMIZER
-from neural_mp.envs.franka_pybullet_env import compute_full_pcd
 
 
 """
@@ -251,6 +251,8 @@ class PcdCore(EncoderCore, BaseNets.PointNetEncoder):
         """
         Forward pass through visual core.
         """
+        inputs = compute_full_pcd(
+            inputs, num_robot_points=2048, num_obstacle_points=4096, target_pcd_type='joint')
         out = super(PcdCore, self).forward(inputs)
         return out
 
@@ -314,7 +316,7 @@ class LowDimCore(EncoderCore, BaseNets.MLP):
                 Some modules may not need this argument, if their output does not depend 
                 on the size of the input, or if they assume fixed size input.
 
-        Returns:
+        Returns
             out_shape ([int]): list of integers corresponding to output shape
         """
         return [self.backbone.nets.output_shape(input_shape)]

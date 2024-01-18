@@ -15,7 +15,6 @@ import robomimic.utils.obs_utils as ObsUtils
 import robomimic.utils.log_utils as LogUtils
 from tqdm import tqdm
 
-from neural_mp.envs.franka_pybullet_env import compute_full_pcd
 from neural_mp.envs.franka_pybullet_env import depth_to_rgb
 
 
@@ -545,11 +544,6 @@ class SequenceDataset(torch.utils.data.Dataset):
         if self.get_pad_mask:
             obs["pad_mask"] = pad_mask
         for k in obs:
-            if 'pcd' in k:
-                obs[k] = compute_full_pcd(
-                pcd_params=obs[k],
-                **self.pcd_params
-            )
             if 'depth' in k:
                 new_obs = []
                 for idx in range(obs[k].shape[0]):
