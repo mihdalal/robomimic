@@ -194,7 +194,7 @@ def playback_trajectory_with_obs(
             if len(pcd_keys) > 0:
                 frames = []
                 for pcd_key in pcd_keys:
-                    pcd = compute_full_pcd(torch.from_numpy(traj_grp[f'obs/{pcd_key}'][()][i:i+1]).unsqueeze(1).cuda(), num_robot_points=2048, num_obstacle_points=4096).cpu().numpy()[0]
+                    pcd = compute_full_pcd(torch.from_numpy(traj_grp[f'obs/{pcd_key}'][()][i:i+1]).cuda(), num_robot_points=2048, num_obstacle_points=4096).cpu().numpy()
                     frame = render_single_pointcloud(pcd[0])
                     frames.append(frame)
                 frame = np.concatenate(frames, axis=1)
