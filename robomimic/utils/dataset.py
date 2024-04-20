@@ -589,8 +589,10 @@ class SequenceDataset(torch.utils.data.Dataset):
                 obs[k] = np.array(new_obs)
             if 'angles' in k and self.pcd_params['normalize_joint_angles']:
                 obs[k] = normalize_franka_joints(obs[k])
-        if compute_pcd_params_saved is not None:
-            obs['saved_params'] = compute_pcd_params_saved
+        
+        #TODO: this breaks when you have multiple datasets with different sized PCD params, fix!
+        # if compute_pcd_params_saved is not None:
+        #     obs['saved_params'] = compute_pcd_params_saved
         return obs
 
     def get_dataset_sequence_from_demo(self, demo_id, index_in_demo, keys, num_frames_to_stack=0, seq_length=1):

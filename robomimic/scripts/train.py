@@ -86,7 +86,7 @@ def make_env(env_meta, use_images, render_video, pcd_params, mpinets_enabled, da
     env = EnvUtils.wrap_env_from_config(env, config=config) # apply environment warpper, if applicable
     return env
 
-def train(config, device, ckpt_path=None, ckpt_dict=None, output_dir=None, start_from_checkpoint=False, rank=0, world_size=1, ddp=False, dataset_path=None):
+def train(config, device, ckpt_path=None, ckpt_dict=None, output_dir=None, start_from_checkpoint=False, rank=0, world_size=1, ddp=False, dataset_path=None, additional_datasets=()):
     """
     Train a model using the algorithm.
     """
@@ -140,9 +140,9 @@ def train(config, device, ckpt_path=None, ckpt_dict=None, output_dir=None, start
 
     # load basic metadata from training file
     print("\n============= Loaded Environment Metadata =============")
-    env_meta = FileUtils.get_env_metadata_from_dataset(dataset_path=config.train.data)
+    env_meta = FileUtils.get_env_metadata_from_dataset(dataset_path=dataset_path)
     shape_meta = FileUtils.get_shape_metadata_from_dataset(
-        dataset_path=config.train.data,
+        dataset_path=dataset_path,
         all_obs_keys=config.all_obs_keys,
         verbose=True
     )
@@ -256,12 +256,29 @@ def train(config, device, ckpt_path=None, ckpt_dict=None, output_dir=None, start
     # load training data
     trainset, validset = TrainUtils.load_data_for_training(
         config, obs_keys=shape_meta["all_obs_keys"])
+    if additional_datasets:
+        trainsets = [trainset]
+        validsets = [validset]
+        for additional_dataset in additional_datasets:
+            # temporarily set the dataset path in the config
+            config.unlock()
+            config.train.data = additional_dataset
+            config.lock()
+            additional_trainset, additional_validset = TrainUtils.load_data_for_training(
+                config, obs_keys=shape_meta["all_obs_keys"])
+            trainsets.append(additional_trainset)
+            validsets.append(additional_validset)
+        config.unlock()
+        config.train.data = dataset_path # reset the dataset path
+        config.lock()
+        trainset = torch.utils.data.ConcatDataset(trainsets)
+        validset = torch.utils.data.ConcatDataset(validsets)
     if ddp:
         train_sampler = torch.utils.data.distributed.DistributedSampler(trainset,
                                                                     num_replicas=world_size,
                                                                     rank=rank)
     else:
-        train_sampler = trainset.get_dataset_sampler()
+        train_sampler = None
     print("\n============= Training Dataset =============")
     print(trainset)
     print("")
@@ -272,8 +289,6 @@ def train(config, device, ckpt_path=None, ckpt_dict=None, output_dir=None, start
 
     # maybe retreve statistics for normalizing observations
     obs_normalization_stats = None
-    if config.train.hdf5_normalize_obs:
-        obs_normalization_stats = trainset.get_obs_normalization_stats()
 
     # initialize data loaders
     train_loader = DataLoader(
@@ -295,7 +310,7 @@ def train(config, device, ckpt_path=None, ckpt_dict=None, output_dir=None, start
                                                                         num_replicas=world_size,
                                                                         rank=rank)
         else:
-            valid_sampler = validset.get_dataset_sampler()
+            valid_sampler = None
         valid_loader = DataLoader(
             dataset=validset,
             sampler=valid_sampler,
@@ -599,8 +614,8 @@ def main(rank, args):
     else:
         config = config_factory(args.algo)
 
-    if args.dataset is not None:
-        config.train.data = args.dataset
+    if args.datasets is not None:
+        config.train.data = args.datasets[0] # assume this is primary dataset
 
     if args.name is not None:
         config.experiment.name = args.name
@@ -648,7 +663,7 @@ def main(rank, args):
     try:
         train(config, device=device, ckpt_path=ckpt_path, ckpt_dict=ckpt_dict, 
               output_dir=args.output_dir, start_from_checkpoint=args.start_from_checkpoint, 
-              rank=rank, world_size=args.num_gpus, ddp=args.ddp, dataset_path=dataset_path)
+              rank=rank, world_size=args.num_gpus, ddp=args.ddp, dataset_path=dataset_path, additional_datasets=args.datasets[1:])
     except Exception as e:
         res_str = "run failed with error:\n{}\n\n{}".format(e, traceback.format_exc())
     print(res_str)
@@ -691,7 +706,8 @@ if __name__ == "__main__":
 
     # Dataset path, to override the one in the config
     parser.add_argument(
-        "--dataset",
+        "--datasets",
+        nargs='+',
         type=str,
         default=None,
         help="(optional) if provided, override the dataset path defined in the config",

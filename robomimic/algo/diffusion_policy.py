@@ -34,7 +34,6 @@ from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModel
 tokenizer = AutoTokenizer.from_pretrained('distilbert-base-uncased')
 lang_model = AutoModel.from_pretrained("distilbert-base-uncased", torch_dtype=torch.float16)
-lang_model.to('cuda')
 
 
 # import torch.distributed as dist
