@@ -30,7 +30,7 @@
             "enabled": true,
             "n": 25,
             "horizon": 150,
-            "rate": 100,
+            "rate": 25,
             "warmstart": 0,
             "terminate_on_success": true
         },
@@ -52,7 +52,7 @@
         "hdf5_normalize_obs": false,
         "hdf5_filter_key": "train",
         "hdf5_validation_filter_key": "valid",
-        "seq_length": 3,
+        "seq_length": 15,
         "pad_seq_length": true,
         "frame_stack": 2,
         "pad_frame_stack": true,
@@ -61,7 +61,7 @@
         ],
         "goal_mode": null,
         "cuda": true,
-        "batch_size": 256,
+        "batch_size": 128,
         "num_epochs": 2000,
         "seed": 1
     },
@@ -95,7 +95,7 @@
             "power": 0.75
         },
         "ddpm": {
-            "enabled": true,
+            "enabled": false,
             "num_train_timesteps": 100,
             "num_inference_timesteps": 100,
             "beta_schedule": "squaredcos_cap_v2",
@@ -103,7 +103,7 @@
             "prediction_type": "epsilon"
         },
         "ddim": {
-            "enabled": false,
+            "enabled": true,
             "num_train_timesteps": 100,
             "num_inference_timesteps": 10,
             "beta_schedule": "squaredcos_cap_v2",

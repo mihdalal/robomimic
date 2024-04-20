@@ -6,11 +6,9 @@ from typing import Callable, Union
 import math
 from collections import OrderedDict, deque
 from packaging.version import parse as parse_version
-import random
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torchvision
 # requires diffusers==0.11.1
 from diffusers.schedulers.scheduling_ddpm import DDPMScheduler
 from diffusers.schedulers.scheduling_ddim import DDIMScheduler
@@ -31,16 +29,7 @@ import os
 
 
 from tqdm import tqdm
-from transformers import AutoTokenizer, AutoModel
-tokenizer = AutoTokenizer.from_pretrained('distilbert-base-uncased')
-lang_model = AutoModel.from_pretrained("distilbert-base-uncased", torch_dtype=torch.float16)
 
-
-# import torch.distributed as dist
-# from torch.nn.parallel import DistributedDataParallel as DDP
-
-import cv2
-import copy
 
 
 @register_algo_factory_func("diffusion_policy")
@@ -155,19 +144,7 @@ class DiffusionPolicyUNet(PolicyAlgo):
 
         input_batch = dict()
 
-        ## Semi-hacky fix which does the filtering for raw language which is just a list of lists of strings
-        input_batch["obs"] = {k: batch["obs"][k][:, :To, :] for k in batch["obs"] if "raw" not in k }
-        if "lang_fixed/language_raw" in batch["obs"].keys():
-            str_ls = list(batch['obs']['lang_fixed/language_raw'][0])
-            input_batch["obs"]["lang_fixed/language_raw"] = [str_ls] * To
-
-        with torch.no_grad():
-            if "raw_language" in batch["obs"].keys():
-                raw_lang_strings = [byte_string.decode('utf-8') for byte_string in batch["obs"]['raw_language']]
-                encoded_input = tokenizer(raw_lang_strings, padding=True, truncation=True, return_tensors='pt').to('cuda')
-                outputs = lang_model(**encoded_input)
-                encoded_lang = outputs.last_hidden_state.sum(1).squeeze().unsqueeze(1).repeat(1, To, 1)
-                input_batch["obs"]["lang_fixed/language_distilbert"] = encoded_lang.type(torch.float32)
+        input_batch["obs"] = {k: batch["obs"][k][:, :To, :] for k in batch["obs"]}
 
         input_batch["actions"] = batch["actions"][:, :Tp, :]
         
@@ -179,15 +156,6 @@ class DiffusionPolicyUNet(PolicyAlgo):
             if not all_in_range:
                 raise ValueError('"actions" must be in range [-1,1] for Diffusion Policy! Check if hdf5_normalize_action is enabled.')
             self.action_check_done = True
-
-        ## LOGGING HOW MANY NANs there are
-        # bz = input_batch["actions"].shape[0]
-        # nanamt = torch.BoolTensor([False] * bz)
-        # for key in input_batch["obs"]:
-        #     if key == "pad_mask":
-        #         continue
-        #     nanamt = torch.logical_or(nanamt, torch.isnan(input_batch["obs"][key].reshape(bz, -1).mean(1)))
-        # print(nanamt.float().mean())
 
         for key in input_batch["obs"]:
             input_batch["obs"][key] = torch.nan_to_num(input_batch["obs"][key])
@@ -335,20 +303,7 @@ class DiffusionPolicyUNet(PolicyAlgo):
 
         ###############################
 
-        # TODO: obs_queue already handled by frame_stack
-        # make sure we have at least To observations in obs_queue
-        # if not enough, repeat
-        # if already full, append one to the obs_queue
-        # n_repeats = max(To - len(self.obs_queue), 1)
-        # self.obs_queue.extend([obs_dict] * n_repeats)
-        
         if len(self.action_queue) == 0:
-            # no actions left, run inference
-            # turn obs_queue into dict of tensors (concat at T dim)
-            # import pdb; pdb.set_trace()
-            # obs_dict_list = TensorUtils.list_of_flat_dict_to_dict_of_list(list(self.obs_queue))
-            # obs_dict_tensor = dict((k, torch.cat(v, dim=0).unsqueeze(0)) for k,v in obs_dict_list.items())
-            
             # run inference
             # [1,T,Da]
             action_sequence = self._get_action_trajectory(obs_dict=obs_dict)
