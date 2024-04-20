@@ -536,6 +536,8 @@ class SequenceDataset(torch.utils.data.Dataset):
         Returns:
             a dictionary of extracted items.
         """
+        has_compute_pcd_params = 'compute_pcd_params' in keys
+        keys = [k for k in keys if k!='compute_pcd_params']
         obs, pad_mask = self.get_sequence_from_demo(
             demo_id,
             index_in_demo=index_in_demo,
@@ -554,8 +556,6 @@ class SequenceDataset(torch.utils.data.Dataset):
             obs['current_angles'] += noise
             # clamp to joint limits
             obs['current_angles'] = np.clip(obs['current_angles'], FRANKA_LOWER_LIMITS, FRANKA_UPPER_LIMITS)
-        if 'compute_pcd_params' in obs:
-            obs['compute_pcd_params'][:, :7] = obs['current_angles']
         if 'goal_angles' in obs and self.pcd_params['relabel_goal_angles']:
             # sample goal as a future obs (HER style relabeling)
             demo_length = self._demo_id_to_demo_length[demo_id]
@@ -573,6 +573,16 @@ class SequenceDataset(torch.utils.data.Dataset):
             # repeat to match obs['current_angles'] shape
             goal_angles = np.repeat(goal_angles[None, :], obs['current_angles'].shape[0], axis=0)
             obs['goal_angles'] = goal_angles
+        if has_compute_pcd_params:
+            obs_0, _ = self.get_sequence_from_demo(
+                demo_id,
+                index_in_demo=0,
+                keys=tuple('{}/{}'.format(prefix, k) for k in ['compute_pcd_params']),
+                num_frames_to_stack=0,
+                seq_length=1,
+            )
+            obs_0 = {k.split('/')[1]: obs_0[k] for k in obs_0}  # strip the prefix
+            obs['compute_pcd_params'] = np.concatenate([obs['current_angles'], obs['goal_angles'], obs_0['compute_pcd_params'].repeat(obs['current_angles'].shape[0], 0)], axis=1)
         compute_pcd_params_saved = None
         for k in obs:
             if 'pcd' in k:
