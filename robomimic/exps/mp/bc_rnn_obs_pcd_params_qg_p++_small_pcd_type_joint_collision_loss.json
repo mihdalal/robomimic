@@ -12,7 +12,7 @@
         "save": {
             "enabled": true,
             "every_n_seconds": null,
-            "every_n_epochs": 50,
+            "every_n_epochs": 250,
             "epochs": [],
             "on_best_validation": false,
             "on_best_rollout_return": false,
@@ -28,9 +28,9 @@
         "video_skip": 1,
         "rollout": {
             "enabled": true,
-            "n": 50,
+            "n": 25,
             "horizon": 150,
-            "rate": 50,
+            "rate": 250,
             "warmstart": 0,
             "terminate_on_success": true
         },
@@ -39,7 +39,8 @@
             "num_obstacle_points": 4096,
             "target_pcd_type": "joint",
             "noise_scale": 0.0
-        }
+        },
+        "num_envs": 20
     },
     "train": {
         "data": "/home/mdalal/research/neural_mp/neural_mp/datasets/robomimic_table_simple_1600_224_smoothed.hdf5",
@@ -61,7 +62,7 @@
         "goal_mode": null,
         "cuda": true,
         "batch_size": 16,
-        "num_epochs": 10000,
+        "num_epochs": 10000000,
         "seed": 1
     },
     "algo": {
@@ -83,13 +84,13 @@
             "l2_weight": 1.0,
             "l1_weight": 0.0,
             "cos_weight": 0.0,
-            "collision_weight": 1000.0,
-	    "collision_loss_params":{
-            "hinge_loss": false,
-            "compute_loss_on_penetrations_only": true,
-            "smooth_sdf_loss": "none",
-            "reduction": "mean"
-        }
+            "collision_weight": 100000.0,
+            "point_match_weight": 0.0,
+            "collision_loss_params": {
+                "margin": 0.03,
+                "hinge_loss": true,
+                "reduction": "mean"
+            }
         },
         "actor_layer_dims": [],
         "gaussian": {
