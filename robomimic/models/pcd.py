@@ -6,9 +6,10 @@ from typing import Tuple
 from pointnet2_ops.pointnet2_modules import PointnetSAModule
 
 class MPiNetsPointNet(pl.LightningModule):
-    def __init__(self, size='small'):
+    def __init__(self, size='small', output_dim=1024):
         super().__init__()
         self.size = size
+        self.output_dim = output_dim
         self._build_model()
 
     def _build_model(self):
@@ -74,7 +75,7 @@ class MPiNetsPointNet(pl.LightningModule):
                 nn.Linear(2048, 1024),
                 nn.GroupNorm(16, 1024),
                 nn.LeakyReLU(inplace=True),
-                nn.Linear(1024, 1024),
+                nn.Linear(1024, self.output_dim),
             )
         elif self.size == 'medium':
             self.SA_modules.append(

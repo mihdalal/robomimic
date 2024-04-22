@@ -52,6 +52,8 @@ def algo_config_to_class(algo_config):
     
     mpinets_enabled = algo_config.mpinets.enabled if "mpinets" in algo_config else False
     
+    act_enabled = algo_config.transformer.act_enabled if "transformer" in algo_config else False
+    
     if mpinets_enabled:
         if rnn_enabled:
             algo_class = BC_RNN_MpiNet
@@ -83,6 +85,8 @@ def algo_config_to_class(algo_config):
     else:
         if rnn_enabled:
             algo_class, algo_kwargs = BC_RNN, {}
+        elif act_enabled:
+            algo_class, algo_kwargs = BC_ACT, {}
         elif transformer_enabled:
             algo_class, algo_kwargs = BC_Transformer, {}
         else:
@@ -1260,6 +1264,130 @@ class BC_Transformer(BC):
         assert not self.nets.training
 
         return self.nets["policy"]('forward', obs_dict, actions=None, goal_dict=goal_dict)[:, -1, :]
+
+class BC_ACT(BC):
+    """
+    BC training with a ACT policy.
+    """
+    def _create_networks(self):
+        """
+        Creates networks and places them into @self.nets.
+        """
+        assert self.algo_config.transformer.enabled
+
+        self.nets = nn.ModuleDict()
+        self.nets["policy"] = PolicyNets.TransformerActorACTNetwork(
+            obs_shapes=self.obs_shapes,
+            goal_shapes=self.goal_shapes,
+            ac_dim=self.ac_dim,
+            encoder_kwargs=ObsUtils.obs_encoder_kwargs_from_config(self.obs_config.encoder),
+            **BaseNets.transformer_args_from_config(self.algo_config.transformer),
+        )
+        self._set_params_from_config()
+        self.nets = self.nets.float().to(self.device)
+        
+    def _set_params_from_config(self):
+        """
+        Read specific config variables we need for training / eval.
+        Called by @_create_networks method
+        """
+        self.context_length = self.algo_config.transformer.context_length
+        self.supervise_all_steps = self.algo_config.transformer.supervise_all_steps
+
+    def process_batch_for_training(self, batch):
+        """
+        Processes input batch from a data loader to filter out
+        relevant information and prepare the batch for training.
+        Args:
+            batch (dict): dictionary with torch.Tensors sampled
+                from a data loader
+        Returns:
+            input_batch (dict): processed and filtered batch that
+                will be used for training
+        """
+        input_batch = dict()
+        h = self.context_length
+        input_batch["obs"] = {k: batch["obs"][k][:, :h, :] for k in batch["obs"]}
+        input_batch["goal_obs"] = batch.get("goal_obs", None) # goals may not be present
+
+        # supervision on entire sequence (instead of just current timestep)
+        input_batch["actions"] = batch["actions"][:, :h, :]
+
+        input_batch = TensorUtils.to_device(TensorUtils.to_float(input_batch), self.device)
+        return input_batch
+
+    def _forward_training(self, batch, epoch=None):
+        """
+        Internal helper function for BC_Transformer algo class. Compute forward pass
+        and return network outputs in @predictions dict.
+
+        Args:
+            batch (dict): dictionary with torch.Tensors sampled
+                from a data loader and filtered by @process_batch_for_training
+
+        Returns:
+            predictions (dict): dictionary containing network outputs
+        """
+        # ensure that transformer context length is consistent with temporal dimension of observations
+        predictions = OrderedDict()
+        predictions["actions"] = self.nets["policy"]('forward', 
+            obs_dict=batch["obs"], 
+            goal_dict=batch["goal_obs"],
+            actions=batch["actions"],
+        )
+        return predictions
+    
+    def _compute_losses(self, predictions, batch):
+        """
+        Internal helper function for BC algo class. Compute losses based on
+        network outputs in @predictions dict, using reference labels in @batch.
+
+        Args:
+            predictions (dict): dictionary containing network outputs, from @_forward_training
+            batch (dict): dictionary with torch.Tensors sampled
+                from a data loader and filtered by @process_batch_for_training
+
+        Returns:
+            losses (dict): dictionary of losses computed over the batch
+        """
+        losses = OrderedDict()
+        a_target = batch["actions"]
+        actions = predictions["actions"][:, len(batch['obs'])-1:] # skip first len(batch['obs'])-1 timesteps since they are not used to predict the actions
+        mask = (a_target == torch.zeros(a_target.shape[-1], device=self.device)).all(dim=-1) 
+        
+        # note this is because the actions can be padded to complete zeros in the dataset (if we sample at the end of the sequence)
+        # we throw those actions out of the loss
+        a_target = a_target[~mask] # B*T x act_dim
+        actions = actions[~mask] # B*T x act_dim
+        losses["l2_loss"] = nn.MSELoss()(actions, a_target)
+        losses["l1_loss"] = nn.SmoothL1Loss()(actions, a_target)
+        # cosine direction loss on eef delta position
+        losses["cos_loss"] = LossUtils.cosine_loss(actions[..., :3], a_target[..., :3])
+
+        action_losses = [
+            self.algo_config.loss.l2_weight * losses["l2_loss"],
+            self.algo_config.loss.l1_weight * losses["l1_loss"],
+            self.algo_config.loss.cos_weight * losses["cos_loss"],
+        ]
+        action_loss = sum(action_losses)
+        losses["action_loss"] = action_loss
+        return losses
+
+    def get_action(self, obs_dict, goal_dict=None):
+        """
+        Get policy action outputs.
+        Args:
+            obs_dict (dict): current observation
+            goal_dict (dict): (optional) goal
+        Returns:
+            action (torch.Tensor): action tensor
+        """
+        assert not self.nets.training
+        actions = torch.zeros((obs_dict['current_angles'].shape[0], self.global_config.train.seq_length, self.ac_dim), device=self.device)
+        # add time dimension to obs_dict
+        obs_dict = {k: obs_dict[k].unsqueeze(1) for k in obs_dict}
+        obs_shift = self.algo_config.transformer.context_length - self.global_config.train.seq_length
+        return self.nets["policy"]('forward', obs_dict, actions=actions, goal_dict=goal_dict)[:, obs_shift, :] # obs_shift action corresponds to the first timestep prediction
 
 
 class BC_Transformer_GMM(BC_Transformer):

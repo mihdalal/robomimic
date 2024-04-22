@@ -129,6 +129,7 @@ class BaseConfig(Config):
         self.experiment.pcd_params.normalize_joint_angles = False
         self.experiment.pcd_params.relabel_goal_angles = False
         self.experiment.num_envs = 1
+        self.train.pad_same = True
 
     def train_config(self):
         """

@@ -122,7 +122,7 @@ def playback_trajectory_with_env(
     traj_len = states.shape[0]
     action_playback = (actions is not None)
     if action_playback:
-        traj_len -= 1
+        traj_len = actions.shape[0]
 
     for i in range(traj_len):
         if action_playback:
@@ -130,9 +130,9 @@ def playback_trajectory_with_env(
             if i < traj_len - 1:
                 # check whether the actions deterministically lead to the same recorded states
                 state_playback = env.get_state()["states"]
-                if not np.all(np.equal(states[i + 1], state_playback)):
-                    err = np.linalg.norm(states[i + 1] - state_playback)
-                    print("warning: playback diverged by {} at step {}".format(err, i))
+                # if not np.all(np.equal(states[i + 1], state_playback)):
+                #     err = np.linalg.norm(states[i + 1] - state_playback)
+                #     print("warning: playback diverged by {} at step {}".format(err, i))
             if done:
                 break
         else:
@@ -240,7 +240,8 @@ def playback_dataset(args):
         )
         ObsUtils.initialize_obs_utils_with_obs_specs(obs_modality_specs=dummy_spec)
         env_meta = FileUtils.get_env_metadata_from_dataset(dataset_path=args.dataset)
-        env_meta['env_kwargs']['cfg']['task']['include_mpi_nets_info_in_logs'] = True if args.use_actions else False
+        # env_meta['env_kwargs']['cfg']['task']['include_mpi_nets_info_in_logs'] = True if args.use_actions else False
+        env_meta['env_kwargs']['cfg']['task']['setup_cameras'] = True if args.use_actions else False
         pcd_params = dict(num_robot_points=128, num_obstacle_points=4096)
         env = EnvUtils.create_env_from_metadata(env_meta=env_meta, render=args.render, render_offscreen=write_video, pcd_params=pcd_params)
 

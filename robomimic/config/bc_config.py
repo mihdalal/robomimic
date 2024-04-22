@@ -105,6 +105,7 @@ class BCConfig(BaseConfig):
         self.algo.transformer.activation = "gelu"                   # activation function for MLP in Transformer Block
         self.algo.transformer.supervise_all_steps = False           # if true, supervise all intermediate actions, otherwise only final one
         self.algo.transformer.nn_parameter_for_timesteps = True     # if true, use nn.Parameter otherwise use nn.Embedding
+        self.algo.transformer.act_enabled = False
 
         # mp settings
         self.experiment.rollout.evaluate_on_dataset = False
@@ -126,5 +127,6 @@ class BCConfig(BaseConfig):
         self.experiment.dagger.num_episodes = 10 # this is per env so 10*num_envs overall
         self.experiment.dagger.resampling_strategy = "all" # all, collision, or random
         self.experiment.dagger.num_trajs_to_relabel = 1000 # how many trajs to relabel (number of mp calls)
+        
         
         

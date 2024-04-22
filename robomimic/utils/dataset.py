@@ -39,6 +39,7 @@ class SequenceDataset(torch.utils.data.Dataset):
         filter_by_attribute=None,
         load_next_obs=True,
         pcd_params=None,
+        pad_same=True,
     ):
         """
         Dataset class for fetching sequences of experience.
@@ -86,6 +87,10 @@ class SequenceDataset(torch.utils.data.Dataset):
                 demonstrations to load
 
             load_next_obs (bool): whether to load next_obs from the dataset
+            
+            pcd_params (dict): dictionary of parameters for computing PCDs
+            
+            pad_same (bool): whether to pad the same observation at the beginning and end of the sequence
         """
         super(SequenceDataset, self).__init__()
 
@@ -160,6 +165,7 @@ class SequenceDataset(torch.utils.data.Dataset):
             self.hdf5_cache = None
         self.close_and_delete_hdf5_handle()
         self.ep_to_hdf5_file = None
+        self.pad_same = pad_same
 
     def load_demo_info(self, filter_by_attribute=None, demos=None):
         """
@@ -515,7 +521,7 @@ class SequenceDataset(torch.utils.data.Dataset):
             data = self.get_dataset_for_ep(demo_id, k)
             seq[k] = data[seq_begin_index: seq_end_index]
 
-        seq = TensorUtils.pad_sequence(seq, padding=(seq_begin_pad, seq_end_pad), pad_same=True)
+        seq = TensorUtils.pad_sequence(seq, padding=(seq_begin_pad, seq_end_pad), pad_same=self.pad_same, pad_values=0.0)
         pad_mask = np.array([0] * seq_begin_pad + [1] * (seq_end_index - seq_begin_index) + [0] * seq_end_pad)
         pad_mask = pad_mask[:, None].astype(bool)
 

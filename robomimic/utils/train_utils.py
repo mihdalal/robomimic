@@ -164,6 +164,7 @@ def dataset_factory(config, obs_keys, filter_by_attribute=None, dataset_path=Non
         hdf5_normalize_obs=config.train.hdf5_normalize_obs,
         filter_by_attribute=filter_by_attribute,
         pcd_params=config.experiment.pcd_params.to_dict(),
+        pad_same=config.train.pad_same,
     )
     dataset = SequenceDataset(**ds_kwargs)
 

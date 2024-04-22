@@ -904,10 +904,9 @@ class PointNetEncoder(Module):
     """
     Base class for ConvNets.
     """
-    def __init__(self, encoder_size='small'):
+    def __init__(self, encoder_size='small', output_dim=1024):
         super(PointNetEncoder, self).__init__()
-        net = MPiNetsPointNet(size=encoder_size)
-        net = torch.compile(net)
+        net = MPiNetsPointNet(size=encoder_size, output_dim=output_dim)
         self.nets = net
 
     def forward(self, inputs):
@@ -930,14 +929,7 @@ class PointNetEncoder(Module):
         Returns:
             out_shape ([int]): list of integers corresponding to output shape
         """
-        if self.nets.size == 'super_small':
-            return [7]
-        elif self.nets.size == 'small':
-            return [1024]
-        elif self.nets.size == 'medium':
-            return [1536]
-        elif self.nets.size == 'large':
-            return [2048]
+        return [self.nets.output_dim]
 
     def __repr__(self):
         """Pretty print network."""
@@ -1170,5 +1162,7 @@ class DDPModelWrapper(nn.Module):
             return self.model.forward_step(*args, **kwargs)
         elif forward_type == 'get_rnn_init_state':
             return self.model.get_rnn_init_state(*args, **kwargs)
+        elif forward_type == 'forward':
+            return self.model.forward(*args, **kwargs)
         else:
             return self.model(*args, **kwargs)
