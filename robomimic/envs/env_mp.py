@@ -434,8 +434,8 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
                 )[0]
             if 'angles' in k and self.pcd_params.get('normalize_joint_angles', False):
                 ob_return[k] = normalize_franka_joints(ob_return[k])
-        if saved_pcd_params is not None:
-            ob_return['saved_params'] = saved_pcd_params
+        # if saved_pcd_params is not None:
+        #     ob_return['saved_params'] = saved_pcd_params
         return ob_return
 
     def get_state(self):

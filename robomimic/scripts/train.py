@@ -86,7 +86,7 @@ def make_env(env_meta, use_images, render_video, pcd_params, mpinets_enabled, da
     env = EnvUtils.wrap_env_from_config(env, config=config) # apply environment warpper, if applicable
     return env
 
-def train(config, device, ckpt_path=None, ckpt_dict=None, output_dir=None, start_from_checkpoint=False, rank=0, world_size=1, ddp=False, dataset_path=None, additional_datasets=()):
+def train(config, device, ckpt_path=None, ckpt_dict=None, output_dir=None, start_from_checkpoint=False, rank=0, world_size=1, ddp=False, dataset_path=None, additional_datasets=None):
     """
     Train a model using the algorithm.
     """
@@ -663,7 +663,7 @@ def main(rank, args):
     try:
         train(config, device=device, ckpt_path=ckpt_path, ckpt_dict=ckpt_dict, 
               output_dir=args.output_dir, start_from_checkpoint=args.start_from_checkpoint, 
-              rank=rank, world_size=args.num_gpus, ddp=args.ddp, dataset_path=dataset_path, additional_datasets=args.datasets[1:])
+              rank=rank, world_size=args.num_gpus, ddp=args.ddp, dataset_path=dataset_path, additional_datasets=args.datasets[1:] if args.datasets is not None else None)
     except Exception as e:
         res_str = "run failed with error:\n{}\n\n{}".format(e, traceback.format_exc())
     print(res_str)
