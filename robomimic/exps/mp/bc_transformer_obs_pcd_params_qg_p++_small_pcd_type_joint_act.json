@@ -30,7 +30,7 @@
             "enabled": true,
             "n": 25,
             "horizon": 150,
-            "rate": 25,
+            "rate": 50,
             "warmstart": 0,
             "terminate_on_success": true
         },
@@ -61,7 +61,7 @@
         ],
         "goal_mode": null,
         "cuda": true,
-        "batch_size": 16,
+        "batch_size": 128,
         "num_epochs": 10000000,
         "seed": 1,
         "pad_same": false
@@ -72,18 +72,17 @@
                 "optimizer_type": "adamw",
                 "learning_rate": {
                     "initial": 0.0001,
-                    "decay_factor": 0.1,
-                    "epoch_schedule": [100],
-                    "scheduler_type": "linear"
+                    "decay_factor": 0.01,
+                    "epoch_schedule": []
                 },
                 "regularization": {
-                    "L2": 0.01
+                    "L2": 0.0
                 }
             }
         },
         "loss": {
-            "l2_weight": 0.0,
-            "l1_weight": 1.0,
+            "l2_weight": 1.0,
+            "l1_weight": 0.0,
             "cos_weight": 0.0
         },
         "actor_layer_dims": [],
@@ -96,7 +95,7 @@
             "low_noise_eval": true
         },
         "gmm": {
-            "enabled": false,
+            "enabled": true,
             "num_modes": 5,
             "min_std": 0.0001,
             "std_activation": "softplus",

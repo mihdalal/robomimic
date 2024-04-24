@@ -71,6 +71,8 @@ def algo_config_to_class(algo_config):
     elif gmm_enabled:
         if rnn_enabled:
             algo_class, algo_kwargs = BC_RNN_GMM, {}
+        elif act_enabled:
+            algo_class, algo_kwargs = BC_ACT_GMM, {}
         elif transformer_enabled:
             algo_class, algo_kwargs = BC_Transformer_GMM, {}
         else:
@@ -86,6 +88,7 @@ def algo_config_to_class(algo_config):
         if rnn_enabled:
             algo_class, algo_kwargs = BC_RNN, {}
         elif act_enabled:
+            
             algo_class, algo_kwargs = BC_ACT, {}
         elif transformer_enabled:
             algo_class, algo_kwargs = BC_Transformer, {}
@@ -1388,6 +1391,128 @@ class BC_ACT(BC):
         obs_dict = {k: obs_dict[k].unsqueeze(1) for k in obs_dict}
         obs_shift = self.algo_config.transformer.context_length - self.global_config.train.seq_length
         return self.nets["policy"]('forward', obs_dict, actions=actions, goal_dict=goal_dict)[:, obs_shift, :] # obs_shift action corresponds to the first timestep prediction
+
+
+class BC_ACT_GMM(BC_ACT):
+    """
+    BC training with a Transformer GMM ACT policy.
+    """
+    def _create_networks(self):
+        """
+        Creates networks and places them into @self.nets.
+        """
+        assert self.algo_config.gmm.enabled
+        assert self.algo_config.transformer.enabled
+
+        self.nets = nn.ModuleDict()
+        self.nets["policy"] = PolicyNets.TransformerGMMACTActorNetwork(
+            obs_shapes=self.obs_shapes,
+            goal_shapes=self.goal_shapes,
+            ac_dim=self.ac_dim,
+            num_modes=self.algo_config.gmm.num_modes,
+            min_std=self.algo_config.gmm.min_std,
+            std_activation=self.algo_config.gmm.std_activation,
+            low_noise_eval=self.algo_config.gmm.low_noise_eval,
+            encoder_kwargs=ObsUtils.obs_encoder_kwargs_from_config(self.obs_config.encoder),
+            **BaseNets.transformer_args_from_config(self.algo_config.transformer),
+        )
+        self._set_params_from_config()
+        self.nets = self.nets.float().to(self.device)
+
+    def _forward_training(self, batch, epoch=None):
+        """
+        Modify from super class to support GMM training.
+        """
+        # ensure that transformer context length is consistent with temporal dimension of observations
+        # TensorUtils.assert_size_at_dim(
+        #     batch["obs"], 
+        #     size=(self.context_length), 
+        #     dim=1, 
+        #     msg="Error: expect temporal dimension of obs batch to match transformer context length {}".format(self.context_length),
+        # )
+        
+        dists = self.nets['policy']('train', 
+            obs_dict=batch["obs"], 
+            goal_dict=batch["goal_obs"],
+            low_noise_eval=False,
+            actions=batch["actions"],
+        )
+
+        # make sure that this is a batch of multivariate action distributions, so that
+        # the log probability computation will be correct
+        assert len(dists.batch_shape) == 2 # [B, T]
+        a_target = batch["actions"]
+        mask = (a_target == torch.zeros(a_target.shape[-1], device=self.device)).all(dim=-1) 
+        log_probs = dists.log_prob(batch["actions"])[~mask]
+
+        predictions = OrderedDict(
+            log_probs=log_probs,
+            actions=dists.sample(),
+        )
+        return predictions
+
+    def _compute_losses(self, predictions, batch):
+        """
+        Internal helper function for BC_Transformer_GMM algo class. Compute losses based on
+        network outputs in @predictions dict, using reference labels in @batch.
+        Args:
+            predictions (dict): dictionary containing network outputs, from @_forward_training
+            batch (dict): dictionary with torch.Tensors sampled
+                from a data loader and filtered by @process_batch_for_training
+        Returns:
+            losses (dict): dictionary of losses computed over the batch
+        """
+
+        # loss is just negative log-likelihood of action targets
+        action_loss = -predictions["log_probs"].mean()
+        a_target = batch["actions"]
+        actions = predictions["actions"]
+        a_target = a_target[:, 0] # just measure loss on the action we would actually predict
+        actions = actions[:, 0] # just measure loss on the action we would actually predict
+        # loss is just negative log-likelihood of action targets
+        l2_loss = nn.MSELoss()(actions, a_target)
+        l1_loss = nn.SmoothL1Loss()(actions, a_target)
+        return OrderedDict(
+            log_probs=-action_loss,
+            action_loss=action_loss,
+            l2_loss=l2_loss,
+            l1_loss=l1_loss,
+        )
+
+    def log_info(self, info):
+        """
+        Process info dictionary from @train_on_batch to summarize
+        information to pass to tensorboard for logging.
+        Args:
+            info (dict): dictionary of info
+        Returns:
+            loss_log (dict): name -> summary statistic
+        """
+        log = PolicyAlgo.log_info(self, info)
+        log["Loss"] = info["losses"]["action_loss"].item()
+        log["Log_Likelihood"] = info["losses"]["log_probs"].item() 
+        if "policy_grad_norms" in info:
+            log["Policy_Grad_Norms"] = info["policy_grad_norms"]
+        if "l2_loss" in info["losses"]:
+            log["L2_Loss"] = info["losses"]["l2_loss"].item()
+        if "l1_loss" in info["losses"]:
+            log["L1_Loss"] = info["losses"]["l1_loss"].item()
+        return log
+
+    def get_action(self, obs_dict, goal_dict=None):
+        """
+        Get policy action outputs.
+        Args:
+            obs_dict (dict): current observation
+            goal_dict (dict): (optional) goal
+        Returns:
+            action (torch.Tensor): action tensor
+        """
+        assert not self.nets.training
+        actions = torch.zeros((obs_dict['current_angles'].shape[0], self.global_config.train.seq_length, self.ac_dim), device=self.device)
+        # add time dimension to obs_dict
+        obs_dict = {k: obs_dict[k].unsqueeze(1) for k in obs_dict}
+        return self.nets["policy"]('forward', obs_dict, actions=actions, goal_dict=goal_dict)[:, 0, :] # first timestep prediction
 
 
 class BC_Transformer_GMM(BC_Transformer):
