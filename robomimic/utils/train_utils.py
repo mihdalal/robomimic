@@ -27,6 +27,7 @@ from robomimic.utils.dataset import SequenceDataset
 from robomimic.envs.env_base import EnvBase
 from robomimic.envs.wrappers import EnvWrapper
 from robomimic.algo import RolloutPolicy
+from tqdm import tqdm
 
 
 def get_exp_dir(config, auto_remove_exp_dir=False):
@@ -685,7 +686,7 @@ def run_dagger_rollout(
     state_dicts = env.env_method("get_state")
     trajs = []
     for state_dict in state_dicts:
-        trajs.append(dict(obs=[], collision_state=[], step=[], success=[], info=[]))
+        trajs.append(dict(obs=[], collision_state=[], step=[], success=[], info=[], initial_state=[state_dict]))
     has_terminated=[False for _ in range(env.num_envs)]
     try:
         for step_i in range(horizon):
@@ -716,6 +717,7 @@ def run_dagger_rollout(
                     traj["collision_state"].append(info[env_idx]["collided_1_cm"])
                     traj['success'].append(success[env_idx])
                     traj['info'].append(info[env_idx])
+                    traj['initial_state'].append(state_dicts[env_idx])
             
             has_terminated = [has_terminated[i] or done[i] or success[i]['task'] for i in range(env.num_envs)]
             if resampling_strategy == 'all':
@@ -728,7 +730,7 @@ def run_dagger_rollout(
     except:
         print(traceback.format_exc())
         print("WARNING: got rollout exception")
-
+    trajs_to_return = []
     for traj in trajs:
         # only relabel trajectories in which the agent actually collided or failed to reach the goal
         if traj['info'][-1]['has_collided'] or not traj['success'][-1]['task']:
@@ -737,7 +739,8 @@ def run_dagger_rollout(
             traj['obs'] = obs   
             traj['collision_state'] = np.array(traj['collision_state'])
             traj['step'] = np.array(traj['step'])
-    return trajs
+            trajs_to_return.append(traj)
+    return trajs_to_return
     
 def replan_from_states(env, trajs, resampling_strategy, num_trajs_to_relabel, dataset, data_grp, online_epoch):
     relabeling_trajs = []
@@ -770,9 +773,9 @@ def replan_from_states(env, trajs, resampling_strategy, num_trajs_to_relabel, da
     total_samples = 0
     if resampling_strategy == 'all':
         num_relabels = 0
-        for chunk in range(0, len(trajs), env.num_envs):
+        for chunk in tqdm(range(0, len(trajs), env.num_envs)):
             max_len = min(len(trajs) - chunk, env.num_envs)
-            chunk_trajs = trajs[chunk:max_len]
+            chunk_trajs = trajs[chunk:chunk+max_len]
             out = env.env_method_pass_idx("relabel_traj_with_mp", chunk_trajs, indices=range(max_len))
             for env_idx in range(max_len):
                 env_traj = out[env_idx]
@@ -780,8 +783,6 @@ def replan_from_states(env, trajs, resampling_strategy, num_trajs_to_relabel, da
                     output_trajs[f"demo_{online_epoch}_{chunk+env_idx}"] = env_traj
                     total_samples += write_trajectory_to_dataset(None, env_traj, data_grp, f"demo_{online_epoch}_{chunk+env_idx}")
                     num_relabels += 1
-            if num_relabels > num_trajs_to_relabel:
-                break
     else:
         # NOTE: this is adding trajectories completely out of order, will not work with sequence models! only MLP
         for chunk in range(0, len(relabeling_trajs), env.num_envs):

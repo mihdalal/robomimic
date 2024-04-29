@@ -28,9 +28,9 @@
         "video_skip": 1,
         "rollout": {
             "enabled": true,
-            "n": 50,
+            "n": 25,
             "horizon": 150,
-            "rate": 250,
+            "rate": 50,
             "warmstart": 0,
             "terminate_on_success": true
         },
@@ -44,9 +44,9 @@
         "dagger": {
             "enabled": true,
             "online_epoch_rate": 25,
-            "num_episodes": 100,
+            "num_episodes": 50,
             "resampling_strategy": "all",
-            "num_trajs_to_relabel": 2000
+            "num_trajs_to_relabel": 10000
         }
     },
     "train": {
@@ -69,7 +69,7 @@
         "goal_mode": null,
         "cuda": true,
         "batch_size": 16,
-        "num_epochs": 10000,
+        "num_epochs": 1000000,
         "seed": 1
     },
     "algo": {

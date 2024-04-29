@@ -236,6 +236,7 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
             self.num_resets += 1
             return self.reset_to({"states": self.initial_states[idx]}), reset_infos
         else:
+            print("resetting to random state")
             self._current_obs = self.env.reset()
             return self.get_observation(self._current_obs), reset_infos
         
@@ -246,8 +247,10 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
         """
         self.saved_demos = self.demos
         self.saved_split = self.split
+        self.saved_initial_states = self.initial_states
         self.demos = None
         self.split = None
+        self.initial_states = None
     
     def set_to_env_original(self):
         """
@@ -255,6 +258,7 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
         """
         self.demos = self.saved_demos
         self.split = self.saved_split
+        self.initial_states = self.saved_initial_states
     
     def finish_traj_with_mp(self, start_configs, goal_configs, num_waypoints, env_idx):
         start_config, goal_config = start_configs[env_idx], goal_configs[env_idx]
@@ -282,6 +286,8 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
             else:
                 plan = self.env.normalize_franka_joints(plan)
 
+            planning_states = [planning_states[0]]
+            plan_obs["compute_pcd_params"] = plan_obs["compute_pcd_params"][0:1, 14:] # remove q and g from pcd params, they will need to be loaded in separately anyways
             if cfg.data.open_loop:
                 traj = {
                     "actions": plan.reshape(1, -1).astype(np.float32),
@@ -316,52 +322,62 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
         actions = []
         states = []
         cfg = self.env.cfg
+        if env_idx >= len(trajs):
+            return {}
         traj = trajs[env_idx]
         start_config = traj['obs']['current_angles'][0]
         goal_config = traj['obs']['goal_angles'][0] # will be const. throughout traj
+        initial_state = traj['initial_state'][0]
+        self.reset_to(initial_state) # sets the obstacles
         self.env.set_robot_joint_state(start_config)
         mp_kwargs = cfg.task.mp_kwargs.copy()
-        plan, _, plan_obs, planning_states, planner, pdef, _ = self.env.mp_to_joint_target(
-            goal_config, **mp_kwargs
+        (
+            plan_actions,
+            _,
+            plan_obs,
+            planning_states,
+            planner,
+            pdef,
+            failure_reason,
+        ) = self.env.mp_to_joint_target(
+            goal_config, allow_approximate_solutions=False, **mp_kwargs
         )
-        if plan is not None:
+        if plan_actions is not None:
             # TODO: make it re-try till it works or max retries
-            plan = np.array(plan)
-            current_configs = plan[:-1, :]  # remove the goal state from the current configs
-            plan = plan[1:, :]  # remove the start state from the predicted waypoints
-            if cfg.data.convert_plan_to_delta:
-                plan = plan - current_configs
-            else:
-                plan = self.env.normalize_franka_joints(plan)
-            actions.append(plan[0])
+            actions.append(plan_actions[0])
             states.append(planning_states[0])
             for step in range(1, len(traj['obs']['current_angles'])):
                 mp_kwargs_ = mp_kwargs.copy()
                 self.env.set_robot_joint_state(traj['obs']['current_angles'][step])
                 mp_kwargs_['planning_time'] = 0.001
                 mp_kwargs_['num_waypoints'] = max(50-step, 2)
-                plan, _, _, planning_states, planner, pdef, _ = self.env.mp_to_joint_target(
-                    goal_config, planner=planner, pdef=pdef, **mp_kwargs_
-                )
+                try:
+                    (
+                        plan_actions,
+                        _,
+                        plan_obs,
+                        planning_states,
+                        planner,
+                        pdef,
+                        failure_reason,
+                    ) = self.env.mp_to_joint_target(
+                        goal_config, planner=planner, pdef=pdef, allow_approximate_solutions=False, **mp_kwargs_
+                    )
+                except:
+                    plan_actions = None
                 # assumption: if original plan successful, can re-plan easily from other states
-                if plan is None:
+                if plan_actions is None:
                     print("Failed to re-plan at step: {}".format(step))
                     break
-                plan = np.array(plan)
-                current_configs = plan[:-1, :]  # remove the goal state from the current configs
-                plan = plan[1:, :]  # remove the start state from the predicted waypoints
-                if cfg.data.convert_plan_to_delta:
-                    plan = plan - current_configs
-                else:
-                    plan = self.env.normalize_franka_joints(plan)
-                actions.append(plan[0])
+                actions.append(plan_actions[0])
                 states.append(planning_states[0])
                 # check if it has collided, if so break
                 if traj['collision_state'][step]:
                     break        
             # shorten obs to same length as actions
             obs = {k:v[:len(actions)] for k, v in traj['obs'].items()}  
-            states = np.array(states).astype(np.float32)
+            obs["compute_pcd_params"] = obs["compute_pcd_params"][0:1, 14:] # remove q and g from pcd params, they will need to be loaded in separately anyways
+            states = np.array(states).astype(np.float32)[0:1]
             actions = np.array(actions).astype(np.float32) 
             output_traj = {
                 'actions': actions, 

@@ -28,6 +28,7 @@ import traceback
 
 from collections import OrderedDict
 
+from robomimic.scripts.split_train_val import split_train_val_from_hdf5
 import torch
 from torch.utils.data import DataLoader
 from diffusion_policy.workspace.train_diffusion_unet_lowdim_workspace import setup
@@ -455,7 +456,7 @@ def train(config, device, ckpt_path=None, ckpt_dict=None, output_dir=None, start
 
         # do rollouts at fixed rate or if it's time to save a new ckpt
         if rank == 0:
-            if config.experiment.dagger.enabled:
+            if config.experiment.dagger.enabled and (epoch % config.experiment.dagger.online_epoch_rate == 0):
                 # wrap model as a RolloutPolicy to prepare for rollouts
                 rollout_model = RolloutPolicy(model, obs_normalization_stats=obs_normalization_stats)
                 dagger_data_dir = os.path.join(log_dir, "dagger_data")
@@ -476,10 +477,15 @@ def train(config, device, ckpt_path=None, ckpt_dict=None, output_dir=None, start
                     num_trajs_to_relabel=config.experiment.dagger.num_trajs_to_relabel,
                     data_writer=data_writer,
                 )
-                trainset.update_demo_info(
-                    list(data.keys()), online_epoch, data, hdf5_file=data_writer
-                )
-                # reload the dataloader
+                
+                config.unlock()
+                config.train.data = dataset_path
+                config.lock()
+                split_train_val_from_hdf5(dataset_path, val_ratio=0.01)
+                additional_trainset, additional_validset = TrainUtils.load_data_for_training(
+                    config, obs_keys=shape_meta["all_obs_keys"])
+                trainset = torch.utils.data.ConcatDataset([trainset, additional_trainset])
+                validset = torch.utils.data.ConcatDataset([validset, additional_validset])
                 train_loader = DataLoader(
                     dataset=trainset,
                     sampler=train_sampler,
@@ -490,7 +496,17 @@ def train(config, device, ckpt_path=None, ckpt_dict=None, output_dir=None, start
                     pin_memory=True,
                     persistent_workers=True if config.train.num_data_workers > 0 else False,
                 )
-                data_writer.close()
+                
+                valid_loader = DataLoader(
+                    dataset=validset,
+                    sampler=valid_sampler,
+                    batch_size=config.train.batch_size,
+                    shuffle=(valid_sampler is None),
+                    num_workers=num_workers,
+                    drop_last=True,
+                    pin_memory=True,
+                    persistent_workers=True if config.train.num_data_workers > 0 else False,
+                )
                 
             video_paths = None
             rollout_check = (epoch % config.experiment.rollout.rate == 0) or (should_save_ckpt and ckpt_reason == "time")
