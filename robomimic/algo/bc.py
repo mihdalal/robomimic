@@ -1272,6 +1272,11 @@ class BC_ACT(BC):
     """
     BC training with a ACT policy.
     """
+    def __init__(self, *args, **kwargs):
+        super(BC_ACT, self).__init__(*args, **kwargs)
+        self.inference_num_open_loop_steps = 4
+        #self.global_config.train.seq_length
+        self.inference_action_cache = []
     def _create_networks(self):
         """
         Creates networks and places them into @self.nets.
@@ -1376,7 +1381,7 @@ class BC_ACT(BC):
         losses["action_loss"] = action_loss
         return losses
 
-    def get_action(self, obs_dict, goal_dict=None):
+    def get_action_old(self, obs_dict, goal_dict=None):
         """
         Get policy action outputs.
         Args:
@@ -1390,8 +1395,44 @@ class BC_ACT(BC):
         # add time dimension to obs_dict
         obs_dict = {k: obs_dict[k].unsqueeze(1) for k in obs_dict}
         obs_shift = self.algo_config.transformer.context_length - self.global_config.train.seq_length
+       
         return self.nets["policy"]('forward', obs_dict, actions=actions, goal_dict=goal_dict)[:, obs_shift, :] # obs_shift action corresponds to the first timestep prediction
 
+    def get_action(self, obs_dict, goal_dict=None):
+        """
+        Get policy action outputs.
+        Args:
+            obs_dict (dict): current observation
+            goal_dict (dict): (optional) goal
+        Returns:
+            action (torch.Tensor): action tensor
+        """
+        assert not self.nets.training   
+       
+        if len(self.inference_action_cache) == 0:
+            # need to iteratively predict the actions
+            bs = obs_dict['current_angles'].shape[0]
+            assert bs == 1, "Only supports batch size 1 for now"
+            obs_dict = {k: obs_dict[k].unsqueeze(1) for k in obs_dict}
+            obs_shift = self.algo_config.transformer.context_length - self.global_config.train.seq_length
+            act_history = []
+            for i in range(self.inference_num_open_loop_steps):
+               
+                zero_act = torch.zeros((bs, self.global_config.train.seq_length-i, self.ac_dim), device=self.device)
+                if len(act_history) == 0:
+                    acts = zero_act
+                else:
+                    _hist = torch.vstack(act_history).unsqueeze(0)
+                    acts = torch.cat([_hist, zero_act], axis = 1)
+                
+                out = self.nets["policy"]('forward', obs_dict, actions=acts, goal_dict=goal_dict)
+                act_history.append(out[:, obs_shift+i, :])
+
+            self.inference_action_cache = torch.vstack(act_history) 
+        
+        cur_act = self.inference_action_cache[0]
+        self.inference_action_cache = self.inference_action_cache[1:]
+        return cur_act.unsqueeze(0)
 
 class BC_ACT_GMM(BC_ACT):
     """
