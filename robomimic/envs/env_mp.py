@@ -204,7 +204,7 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
         self.current_step += 1
         return self.get_observation(obs), reward, self.is_done(), trunc, info
 
-    def reset(self, seed=None):
+    def reset(self, seed=None, reset_with_plan=False):
         """
         Reset environment.
 
@@ -237,7 +237,7 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
             return self.reset_to({"states": self.initial_states[idx]}), reset_infos
         else:
             print("resetting to random state")
-            self._current_obs = self.env.reset()
+            self._current_obs = self.env.reset(reset_with_plan)
             return self.get_observation(self._current_obs), reset_infos
         
     
