@@ -7,6 +7,8 @@ from collections import OrderedDict
 import gym
 import json
 from copy import deepcopy
+
+from tqdm import tqdm
 import gymnasium
 
 from omegaconf import DictConfig, OmegaConf
@@ -107,6 +109,7 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
         self.num_envs = 1
         self.num_resets = 0
         self.initial_states = None
+        self.ep = -1
     
     def set_env_specific_params(self, split, num_envs, env_idx):
         """
@@ -115,7 +118,6 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
         """
         self.split = split
         if split is not None:
-            self.dataset_path = self.dataset_path    
             f = h5py.File(self.dataset_path, "r", libver='latest', swmr=True)
             self.hdf5_file = f
             filter_key = split
@@ -164,43 +166,39 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
         self._current_done = done
         done = self.is_done()
         trunc = done # this is ignored but necessary for gymanasium compatibility
-        if self.num_envs > 1:
-            # add dummy (None) values for other splits:
-            new_info = {}
-            for split in ["train", "valid", None]:
-                if split != self.split:
-                    for k, v in info.items():
-                        if split is None:
-                            new_info[k] = None
-                        else:
-                            new_info['{}/{}'.format(split, k)] = None
-            if self.demos is not None:
-                # add self.split as a prefix to every key in infos
-                info = {f"{self.split}/{k}": v for k, v in info.items()}
-                if self.current_step < len(self.plan):
-                    action_err = np.linalg.norm(action - self.plan[self.current_step])
-                    action_mse = np.mean((action - self.plan[self.current_step])**2)
-                    self.total_action_err += action_err.item()
-                    self.total_action_mse += action_mse.item()
-                    info[f"{self.split}/action_err"] = self.total_action_err / (self.current_step + 1)
-                    info[f"{self.split}/action_mse"] = self.total_action_mse / (self.current_step + 1)
-                    for split in ['train', 'valid']:
-                        if split != self.split:
-                            info[f"{split}/action_err"] = None
-                            info[f"{split}/action_mse"] = None
-                else:
-                    info[f"{self.split}/action_err"] = self.total_action_err / len(self.plan)
-                    info[f"{self.split}/action_mse"] = self.total_action_mse / len(self.plan)
-                    for split in ['train', 'valid']:
-                        if split != self.split:
-                            info[f"{split}/action_err"] = None
-                            info[f"{split}/action_mse"] = None
-            else:
+        # add dummy (None) values for other splits:
+        new_info = {}
+        for split in ["train", "valid", None]:
+            if split != self.split:
+                for k, v in info.items():
+                    if split is None:
+                        new_info[k] = None
+                    else:
+                        new_info['{}/{}'.format(split, k)] = None
+        if self.demos is not None:
+            # add self.split as a prefix to every key in infos
+            info = {f"{self.split}/{k}": v for k, v in info.items()}
+            if self.current_step < len(self.plan):
+                action_err = np.linalg.norm(action - self.plan[self.current_step])
+                action_mse = np.mean((action - self.plan[self.current_step])**2)
+                self.total_action_err += action_err.item()
+                self.total_action_mse += action_mse.item()
+                info[f"{self.split}/action_err"] = self.total_action_err / (self.current_step + 1)
+                info[f"{self.split}/action_mse"] = self.total_action_mse / (self.current_step + 1)
                 for split in ['train', 'valid']:
-                    info[f"{split}/action_err"] = None
-                    info[f"{split}/action_mse"] = None  
+                    if split != self.split:
+                        info[f"{split}/action_err"] = None
+                        info[f"{split}/action_mse"] = None
+            else:
+                info[f"{self.split}/action_err"] = self.total_action_err / len(self.plan)
+                info[f"{self.split}/action_mse"] = self.total_action_mse / len(self.plan)
+                for split in ['train', 'valid']:
+                    if split != self.split:
+                        info[f"{split}/action_err"] = None
+                        info[f"{split}/action_mse"] = None
             new_info.update(info)
             info = new_info
+        info['ep'] = int(self.ep.split('_')[-1])
         self.current_step += 1
         return self.get_observation(obs), reward, self.is_done(), trunc, info
 
@@ -229,6 +227,7 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
             self.total_action_mse = 0
             print("resetting to demo: {}, idx: {}".format(ep, idx))
             self.num_resets += 1
+            self.ep = ep
             return self.reset_to({"states": self.states[0]}), reset_infos
         elif self.initial_states is not None:
             idx = self.num_resets % len(self.initial_states)
@@ -237,20 +236,31 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
             return self.reset_to({"states": self.initial_states[idx]}), reset_infos
         else:
             print("resetting to random state")
-            self._current_obs = self.env.reset(reset_with_plan)
+            self._current_obs = self.env.reset(reset_with_plan=reset_with_plan)
             return self.get_observation(self._current_obs), reset_infos
         
     
-    def set_to_env_sampling(self):
+    def set_to_dagger_sampling(self, num_envs, env_idx):
         """
         Set the environment to sampling randomly (in case it is sampling from dataset states).
         """
         self.saved_demos = self.demos
         self.saved_split = self.split
         self.saved_initial_states = self.initial_states
-        self.demos = None
-        self.split = None
-        self.initial_states = None
+        self.dataset_path = self.dataset_path    
+        f = h5py.File(self.dataset_path, "r", libver='latest', swmr=True)
+        self.hdf5_file = f
+        filter_key = 'train'
+
+        # list of all demonstration episodes (sorted in increasing number order)
+        if filter_key is not None:
+            print("using filter key: {}".format(filter_key))
+            demos = [elem.decode("utf-8") for elem in np.array(f["mask/{}".format(filter_key)])]
+        else:
+            demos = list(f["data"].keys())
+        inds = np.argsort([int(elem[5:]) for elem in demos])
+        self.demos = [demos[i] for i in inds if i % num_envs == env_idx]
+        print("env idx: {}, split: {}, demos: {}".format(env_idx, 'train', len(self.demos)))
     
     def set_to_env_original(self):
         """
@@ -259,50 +269,6 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
         self.demos = self.saved_demos
         self.split = self.saved_split
         self.initial_states = self.saved_initial_states
-    
-    def finish_traj_with_mp(self, start_configs, goal_configs, num_waypoints, env_idx):
-        start_config, goal_config = start_configs[env_idx], goal_configs[env_idx]
-        num_waypoints = num_waypoints[env_idx]
-        self.env.set_robot_joint_state(start_config)
-        mp_kwargs = self.env.cfg.task.mp_kwargs.copy()
-        mp_kwargs['num_waypoints'] = int(num_waypoints)
-        plan, _, plan_obs, planning_states, _, _, _ = self.env.mp_to_joint_target(
-            goal_config, **mp_kwargs
-        )
-        obs = self.get_observation()
-        cfg = self.env.cfg
-        if plan is not None:
-            # TODO: make it re-try till it works or max retries
-            # make sure plan is within joint limits:
-            lower, upper = self.env.get_joint_limits()
-            if np.any(np.less(plan, lower)) or np.any(np.greater(plan, upper)):
-                print("Plan is not within joint limits, skipping")
-                return {}
-            plan = np.array(plan)
-            current_configs = plan[:-1, :]  # remove the goal state from the current configs
-            plan = plan[1:, :]  # remove the start state from the predicted waypoints
-            if cfg.data.convert_plan_to_delta:
-                plan = plan - current_configs
-            else:
-                plan = self.env.normalize_franka_joints(plan)
-
-            planning_states = [planning_states[0]]
-            plan_obs["compute_pcd_params"] = plan_obs["compute_pcd_params"][0:1, 14:] # remove q and g from pcd params, they will need to be loaded in separately anyways
-            if cfg.data.open_loop:
-                traj = {
-                    "actions": plan.reshape(1, -1).astype(np.float32),
-                    "obs": {k: v for k, v in plan_obs[0].items()},
-                    "states": np.array(planning_states).astype(np.float32),
-                }
-            else:
-                traj = {
-                    "actions": plan.astype(np.float32),
-                    "obs": plan_obs,
-                    "states": np.array(planning_states).astype(np.float32),
-                }
-            return traj
-        else:
-            return {}
     
     def relabel_traj_with_mp(self, trajs, env_idx):
         """
@@ -328,66 +294,70 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
         start_config = traj['obs']['current_angles'][0]
         goal_config = traj['obs']['goal_angles'][0] # will be const. throughout traj
         initial_state = traj['initial_state'][0]
+        self.env.reset(reset_with_plan=False)
         self.reset_to(initial_state) # sets the obstacles
         self.env.set_robot_joint_state(start_config)
         mp_kwargs = cfg.task.mp_kwargs.copy()
-        (
-            plan_actions,
-            _,
-            plan_obs,
-            planning_states,
-            planner,
-            pdef,
-            failure_reason,
-        ) = self.env.mp_to_joint_target(
-            goal_config, allow_approximate_solutions=False, **mp_kwargs
-        )
-        if plan_actions is not None:
-            # TODO: make it re-try till it works or max retries
+        
+        # load planner from data
+        ep = 'demo_' + str(traj['info'][0]['ep'])
+        dataset_name = os.path.basename(self.dataset_path).replace('.hdf5', '')
+        data_path = f'planners/{dataset_name}/{ep}.pkl'
+        import neural_mp
+        data_path = os.path.join(os.path.dirname(neural_mp.__file__)[:-len('neural_mp')], data_path)
+        current_angles = self.hdf5_file["data/{}/obs/current_angles".format(ep)][()][0]
+        target_angles = self.hdf5_file["data/{}/obs/goal_angles".format(ep)][()][0]
+        planner, pdef = self.env.load_planner_from_data(data_path, current_angles, target_angles)
+        
+        for step in tqdm(range(len(traj['obs']['current_angles']))):
+            mp_kwargs_ = mp_kwargs.copy()
+            self.env.set_robot_joint_state(traj['obs']['current_angles'][step])
+            mp_kwargs_['initial_planning_time'] = 0.01
+            mp_kwargs_['maximum_planning_time'] = 0.01
+            mp_kwargs_['num_waypoints'] = max(50-step, 2)
+            mp_kwargs_['force_goal_reaching'] = True # this should already have been true in the dataset though
+            try:
+                (
+                    plan_actions,
+                    _,
+                    plan_obs,
+                    planning_states,
+                    planner,
+                    pdef,
+                    failure_reason,
+                ) = self.env.mp_to_joint_target(
+                    goal_config, planner=planner, pdef=pdef, **mp_kwargs_
+                )
+            except:
+                plan_actions = None
+            # assumption: if original plan successful, can re-plan easily from other states
+            if plan_actions is None:
+                print("Failed to re-plan at step: {}".format(step))
+                break
             actions.append(plan_actions[0])
             states.append(planning_states[0])
-            for step in range(1, len(traj['obs']['current_angles'])):
-                mp_kwargs_ = mp_kwargs.copy()
-                self.env.set_robot_joint_state(traj['obs']['current_angles'][step])
-                mp_kwargs_['planning_time'] = 0.001
-                mp_kwargs_['num_waypoints'] = max(50-step, 2)
-                try:
-                    (
-                        plan_actions,
-                        _,
-                        plan_obs,
-                        planning_states,
-                        planner,
-                        pdef,
-                        failure_reason,
-                    ) = self.env.mp_to_joint_target(
-                        goal_config, planner=planner, pdef=pdef, allow_approximate_solutions=False, **mp_kwargs_
-                    )
-                except:
-                    plan_actions = None
-                # assumption: if original plan successful, can re-plan easily from other states
-                if plan_actions is None:
-                    print("Failed to re-plan at step: {}".format(step))
-                    break
-                actions.append(plan_actions[0])
-                states.append(planning_states[0])
-                # check if it has collided, if so break
-                if traj['collision_state'][step]:
-                    break        
-            # shorten obs to same length as actions
-            obs = {k:v[:len(actions)] for k, v in traj['obs'].items()}  
-            obs["compute_pcd_params"] = obs["compute_pcd_params"][0:1, 14:] # remove q and g from pcd params, they will need to be loaded in separately anyways
-            states = np.array(states).astype(np.float32)[0:1]
-            actions = np.array(actions).astype(np.float32) 
-            output_traj = {
-                'actions': actions, 
-                'obs': obs, 
-                'states': states, 
-                'num_samples': len(actions)
-            }
-            return output_traj
-        else:
+            # check if it has collided, if so break
+            if traj['collision_state'][step]:
+                print('collision state reached, breaking')
+                break        
+        if len(actions) == 0:
             return {}
+        # shorten obs to same length as actions
+        obs = {k:v[:len(actions)] for k, v in traj['obs'].items()}  
+        pad = int(obs['saved_params'][0, -1])
+        # we pad saved params because different envs can have different sized pcd params and we need to pad them to the same size
+        # here we undo the padding and remove the last element which is the padding amount
+        obs['saved_params'] = obs['saved_params'][0:1, :-pad-1]
+        obs["compute_pcd_params"] = obs["saved_params"][:, 14:] # remove q and g from pcd params, they will need to be loaded in separately anyways
+        states = np.array(states).astype(np.float32)[0:1]
+        actions = np.array(actions).astype(np.float32) 
+        output_traj = {
+            'actions': actions, 
+            'obs': obs, 
+            'states': states, 
+            'num_samples': len(actions)
+        }
+        return output_traj
         
 
     def reset_to(self, state):
@@ -450,8 +420,11 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
                 )[0]
             if 'angles' in k and self.pcd_params.get('normalize_joint_angles', False):
                 ob_return[k] = normalize_franka_joints(ob_return[k])
-        # if saved_pcd_params is not None:
-        #     ob_return['saved_params'] = saved_pcd_params
+        if saved_pcd_params is not None:
+            # pad to 10000 and also include how much padding was added
+            pad = 10000 - saved_pcd_params.shape[0] - 1
+            saved_pcd_params = np.concatenate([saved_pcd_params, np.zeros((pad)), [pad]], axis=0, dtype=np.float32)
+            ob_return['saved_params'] = saved_pcd_params
         return ob_return
 
     def get_state(self):
