@@ -109,7 +109,7 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
         self.num_envs = 1
         self.num_resets = 0
         self.initial_states = None
-        self.ep = -1
+        self.ep = 'demo_-1'
     
     def set_env_specific_params(self, split, num_envs, env_idx):
         """
@@ -166,15 +166,21 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
         self._current_done = done
         done = self.is_done()
         trunc = done # this is ignored but necessary for gymanasium compatibility
-        # add dummy (None) values for other splits:
+        # add dummy (None) values for all splits:
         new_info = {}
         for split in ["train", "valid", None]:
-            if split != self.split:
-                for k, v in info.items():
-                    if split is None:
+            for k, v in info.items():
+                if split is None:
+                    if split == self.split:
+                        new_info[k] = v
+                    else:
                         new_info[k] = None
+                else:
+                    if split == self.split:
+                        new_info['{}/{}'.format(split, k)] = v
                     else:
                         new_info['{}/{}'.format(split, k)] = None
+        # adding action err
         if self.demos is not None:
             # add self.split as a prefix to every key in infos
             info = {f"{self.split}/{k}": v for k, v in info.items()}
@@ -196,8 +202,12 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
                     if split != self.split:
                         info[f"{split}/action_err"] = None
                         info[f"{split}/action_mse"] = None
-            new_info.update(info)
-            info = new_info
+        else:
+            for split in ['train', 'valid']:
+                info[f"{split}/action_err"] = None
+                info[f"{split}/action_mse"] = None
+        new_info.update(info)
+        info = new_info
         info['ep'] = int(self.ep.split('_')[-1])
         self.current_step += 1
         return self.get_observation(obs), reward, self.is_done(), trunc, info
@@ -242,11 +252,11 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
     
     def set_to_dagger_sampling(self, num_envs, env_idx):
         """
-        Set the environment to sampling randomly (in case it is sampling from dataset states).
+        Set the environment to sampling train states only.
         """
-        self.saved_demos = self.demos
+        self.saved_demos = self.demos.copy() if self.demos is not None else self.demos
         self.saved_split = self.split
-        self.saved_initial_states = self.initial_states
+        self.saved_initial_states = self.initial_states.copy() if self.initial_states is not None else self.initial_states
         self.dataset_path = self.dataset_path    
         f = h5py.File(self.dataset_path, "r", libver='latest', swmr=True)
         self.hdf5_file = f
@@ -260,6 +270,7 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
             demos = list(f["data"].keys())
         inds = np.argsort([int(elem[5:]) for elem in demos])
         self.demos = [demos[i] for i in inds if i % num_envs == env_idx]
+        self.split = 'train'
         print("env idx: {}, split: {}, demos: {}".format(env_idx, 'train', len(self.demos)))
     
     def set_to_env_original(self):
@@ -314,7 +325,6 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
             self.env.set_robot_joint_state(traj['obs']['current_angles'][step])
             mp_kwargs_['initial_planning_time'] = 0.01
             mp_kwargs_['maximum_planning_time'] = 0.01
-            mp_kwargs_['num_waypoints'] = max(50-step, 2)
             mp_kwargs_['force_goal_reaching'] = True # this should already have been true in the dataset though
             try:
                 (
@@ -333,6 +343,9 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
             # assumption: if original plan successful, can re-plan easily from other states
             if plan_actions is None:
                 print("Failed to re-plan at step: {}".format(step))
+                break
+            if plan_actions.max() > 1 or plan_actions.min() < -1:
+                print("plan actions out of bounds")
                 break
             actions.append(plan_actions[0])
             states.append(planning_states[0])

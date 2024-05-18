@@ -28,6 +28,7 @@ from robomimic.envs.env_base import EnvBase
 from robomimic.envs.wrappers import EnvWrapper
 from robomimic.algo import RolloutPolicy
 from tqdm import tqdm
+from stable_baselines3.common.vec_env.subproc_vec_env import _flatten_obs
 
 
 def get_exp_dir(config, auto_remove_exp_dir=False):
@@ -672,18 +673,15 @@ def run_dagger_rollout(
         # retrieve goal from the environment
         goal_dict = env.get_goal()
 
-    results = {}
-    video_count = 0  # video frame counter
-
     total_reward = 0.
     success = env.env_method("is_success")
     success = [{k: False for k in s} for s in success]  # success metrics
-    video_images = []
     open_loop = env.env_method("get_env_cfg", indices=[0])[0].data.open_loop
     if open_loop:
         actions = policy(ob=ob_dict, goal=goal_dict)
         actions = actions.reshape(env.num_envs, -1, env.action_space.shape[0])
     state_dicts = env.env_method("get_state")
+    state_dicts = [state_dict.copy() for state_dict in state_dicts]
     trajs = []
     for state_dict in state_dicts:
         trajs.append(dict(obs=[], collision_state=[], step=[], success=[], info=[], initial_state=[state_dict]))
@@ -698,7 +696,7 @@ def run_dagger_rollout(
             pre_ob_dict = ob_dict.copy()
             # play action
             ob_dict, r, done, info = env.step(ac)
-
+            
             # compute reward
             total_reward += r
 
@@ -714,15 +712,14 @@ def run_dagger_rollout(
                     traj["obs"].append({k: v[env_idx] for k,v in pre_ob_dict.items()})
                     traj["step"].append(step_i)
                     # collision state is measured after step, so we are saving pre-collision state
-                    traj["collision_state"].append(info[env_idx]["collided_1_cm"])
+                    traj["collision_state"].append(info[env_idx]["train/collided"])
                     traj['success'].append(success[env_idx])
                     traj['info'].append(info[env_idx])
                     traj['initial_state'].append(state_dicts[env_idx])
-            
-            has_terminated = [has_terminated[i] or done[i] or success[i]['task'] for i in range(env.num_envs)]
+            has_terminated = [has_terminated[i] or done[i] or success[i]['task'] or trajs[i]['collision_state'][-1] for i in range(env.num_envs)]
             if resampling_strategy == 'all':
                 for env_idx in range(env.num_envs):
-                    if info[env_idx]['collided']:
+                    if info[env_idx]['train/collided']:
                         has_terminated[env_idx] = True
             # break if done
             if all(done) or (terminate_on_success and all([s["task"] for s in success])):
@@ -733,7 +730,7 @@ def run_dagger_rollout(
     trajs_to_return = []
     for traj in trajs:
         # only relabel trajectories in which the agent actually collided or failed to reach the goal
-        if traj['info'][-1]['has_collided'] or not traj['success'][-1]['task']:
+        if traj['info'][-1]['train/has_collided'] or not traj['success'][-1]['task']:
             obs = traj['obs']
             obs = {k: np.array([o[k] for o in obs]) for k in obs[0]}
             traj['obs'] = obs   
@@ -865,7 +862,8 @@ def collect_online_dataset(
 
     data_grp = data_writer.create_group("data")
     for env_name, env in envs.items():
-        env.env_method("set_to_env_sampling")
+        for env_idx in range(env.num_envs):
+            env.env_method_pass_idx("set_to_dagger_sampling", env.num_envs, indices=[env_idx])
         print("rollout: env={}, horizon={}, use_goals={}, num_episodes={}".format(
             env_name, horizon, use_goals, num_episodes,
         ))

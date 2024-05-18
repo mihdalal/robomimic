@@ -43,7 +43,7 @@
         "num_envs": 20,
         "dagger": {
             "enabled": true,
-            "online_epoch_rate": 25,
+            "online_epoch_rate": 10,
             "num_episodes": 50,
             "resampling_strategy": "all",
             "num_trajs_to_relabel": 10000

@@ -48,6 +48,7 @@ import torch.distributed as dist
 import torch.nn as nn
 from stable_baselines3.common.vec_env import SubprocVecEnv, DummyVecEnv
 import h5py
+from torch.utils.data import Sampler
 
 class SubprocVecEnvWrapper(SubprocVecEnv):
     def env_method_pass_idx(self, method_name: str, *method_args, indices = None, **method_kwargs):
@@ -67,6 +68,46 @@ class DummyVecEnvWrapper(DummyVecEnv):
             method_kwargs['env_idx'] = idx
             out.append(getattr(env, method_name)(*method_args, **method_kwargs))
         return out
+
+class BalancedConcatSampler(Sampler):
+    def __init__(self, dataset_lengths, batch_size):
+        """
+        Args:
+        dataset_lengths (list of int): List containing the lengths of each dataset.
+        batch_size (int): Total size of the batch.
+        """
+        self.dataset_lengths = dataset_lengths
+        self.batch_size = batch_size
+        self.num_datasets = len(dataset_lengths)
+        self.samples_per_dataset = batch_size // self.num_datasets
+        
+        # Calculate the total number of samples per dataset per iteration
+        # Ensuring each dataset can be sampled from sufficiently
+        max_length = max(dataset_lengths)
+        self.iterations = (max_length // self.samples_per_dataset) * self.num_datasets
+
+    def __iter__(self):
+        # Create indices for each dataset and extend if necessary
+        indices = [list(range(length)) * (self.iterations // length + 1) for length in self.dataset_lengths]
+        
+        # Shuffle indices for each dataset
+        for idx_list in indices:
+            np.random.shuffle(idx_list)
+        
+        # Concatenate shuffled indices adjusted to dataset offset in the full dataset
+        dataset_offsets = np.cumsum([0] + self.dataset_lengths[:-1])
+        adjusted_indices = [np.array(idx_list)[:self.iterations] + offset for idx_list, offset in zip(indices, dataset_offsets)]
+        
+        # Sample indices from each dataset
+        for i in range(0, self.iterations, self.samples_per_dataset):
+            batch_indices = []
+            for idx_list in adjusted_indices:
+                batch_indices.extend(idx_list[i:i + self.samples_per_dataset])
+            print(batch_indices)
+            yield batch_indices
+
+    def __len__(self):
+        return self.iterations // self.samples_per_dataset
 
 def make_env(env_meta, use_images, render_video, pcd_params, mpinets_enabled, dataset_path, config_path):
     env_meta['env_kwargs']['dataset_path'] = dataset_path
@@ -274,6 +315,9 @@ def train(config, device, ckpt_path=None, ckpt_dict=None, output_dir=None, start
         config.lock()
         trainset = torch.utils.data.ConcatDataset(trainsets)
         validset = torch.utils.data.ConcatDataset(validsets)
+    train_dataset_lengths = [len(trainset)]
+    train_datasets = [trainset]
+    valid_dataset_lengths = [len(validset)]
     if ddp:
         train_sampler = torch.utils.data.distributed.DistributedSampler(trainset,
                                                                     num_replicas=world_size,
@@ -366,6 +410,54 @@ def train(config, device, ckpt_path=None, ckpt_dict=None, output_dir=None, start
         # this is used for doing all-reduce on logs across ddp processes
         group = dist.new_group(list(range(world_size)))
     for epoch in range(epoch, config.train.num_epochs + 1): # epoch numbers start at 1
+        if rank == 0:
+            if config.experiment.dagger.enabled and ((epoch-1) % config.experiment.dagger.online_epoch_rate == 0):
+                # wrap model as a RolloutPolicy to prepare for rollouts
+                rollout_model = RolloutPolicy(model, obs_normalization_stats=obs_normalization_stats)
+                dagger_data_dir = os.path.join(log_dir, "dagger_data")
+                os.makedirs(dagger_data_dir, exist_ok=True)
+                dataset_path = os.path.join(dagger_data_dir, f"online_dataset_{epoch}.hdf5")
+                data_writer = h5py.File(dataset_path, "w")
+                online_epoch = epoch // config.experiment.dagger.online_epoch_rate
+                data = TrainUtils.collect_online_dataset(
+                    policy=rollout_model,
+                    envs=envs,
+                    horizon=config.experiment.rollout.horizon,
+                    use_goals=config.use_goals,
+                    num_episodes=config.experiment.dagger.num_episodes,
+                    render=False,
+                    terminate_on_success=config.experiment.rollout.terminate_on_success,
+                    online_epoch=online_epoch,
+                    resampling_strategy=config.experiment.dagger.resampling_strategy,
+                    num_trajs_to_relabel=config.experiment.dagger.num_trajs_to_relabel,
+                    data_writer=data_writer,
+                )
+                
+                config.unlock()
+                config.train.data = dataset_path
+                config.lock()
+                split_train_val_from_hdf5(dataset_path, val_ratio=0.0)
+                os.system(f'python robomimic/scripts/get_dataset_info.py --dataset {dataset_path}')
+                additional_trainset, additional_validset = TrainUtils.load_data_for_training(
+                    config, obs_keys=shape_meta["all_obs_keys"])
+                train_datasets.append(additional_trainset)
+                trainset = torch.utils.data.ConcatDataset(train_datasets)
+                
+                # this is for balanced sampling which I have not implemented yet
+                train_dataset_lengths.append(len(additional_trainset))
+                valid_dataset_lengths.append(len(additional_validset))
+                
+                # train_sampler = BalancedConcatSampler(train_dataset_lengths, batch_size=config.train.batch_size)
+                # valid_sampler = BalancedConcatSampler(valid_dataset_lengths, batch_size=config.train.batch_size)
+                train_loader = DataLoader(
+                    dataset=trainset,
+                    batch_size=config.train.batch_size,
+                    shuffle=(train_sampler is None),
+                    num_workers=config.train.num_data_workers,
+                    drop_last=True,
+                    pin_memory=True,
+                    persistent_workers=True if config.train.num_data_workers > 0 else False,
+                )
         step_log = TrainUtils.run_epoch(
             model=model,
             data_loader=train_loader,
@@ -455,59 +547,7 @@ def train(config, device, ckpt_path=None, ckpt_dict=None, output_dir=None, start
         # Evaluate the model by by running rollouts
 
         # do rollouts at fixed rate or if it's time to save a new ckpt
-        if rank == 0:
-            if config.experiment.dagger.enabled and (epoch % config.experiment.dagger.online_epoch_rate == 0):
-                # wrap model as a RolloutPolicy to prepare for rollouts
-                rollout_model = RolloutPolicy(model, obs_normalization_stats=obs_normalization_stats)
-                dagger_data_dir = os.path.join(log_dir, "dagger_data")
-                os.makedirs(dagger_data_dir, exist_ok=True)
-                dataset_path = os.path.join(dagger_data_dir, f"online_dataset_{epoch}.hdf5")
-                data_writer = h5py.File(dataset_path, "w")
-                online_epoch = epoch // config.experiment.dagger.online_epoch_rate
-                data = TrainUtils.collect_online_dataset(
-                    policy=rollout_model,
-                    envs=envs,
-                    horizon=config.experiment.rollout.horizon,
-                    use_goals=config.use_goals,
-                    num_episodes=config.experiment.dagger.num_episodes,
-                    render=False,
-                    terminate_on_success=config.experiment.rollout.terminate_on_success,
-                    online_epoch=online_epoch,
-                    resampling_strategy=config.experiment.dagger.resampling_strategy,
-                    num_trajs_to_relabel=config.experiment.dagger.num_trajs_to_relabel,
-                    data_writer=data_writer,
-                )
-                
-                config.unlock()
-                config.train.data = dataset_path
-                config.lock()
-                split_train_val_from_hdf5(dataset_path, val_ratio=0.01)
-                additional_trainset, additional_validset = TrainUtils.load_data_for_training(
-                    config, obs_keys=shape_meta["all_obs_keys"])
-                trainset = torch.utils.data.ConcatDataset([trainset, additional_trainset])
-                validset = torch.utils.data.ConcatDataset([validset, additional_validset])
-                train_loader = DataLoader(
-                    dataset=trainset,
-                    sampler=train_sampler,
-                    batch_size=config.train.batch_size,
-                    shuffle=(train_sampler is None),
-                    num_workers=config.train.num_data_workers,
-                    drop_last=True,
-                    pin_memory=True,
-                    persistent_workers=True if config.train.num_data_workers > 0 else False,
-                )
-                
-                valid_loader = DataLoader(
-                    dataset=validset,
-                    sampler=valid_sampler,
-                    batch_size=config.train.batch_size,
-                    shuffle=(valid_sampler is None),
-                    num_workers=num_workers,
-                    drop_last=True,
-                    pin_memory=True,
-                    persistent_workers=True if config.train.num_data_workers > 0 else False,
-                )
-                
+        if rank == 0:    
             video_paths = None
             rollout_check = (epoch % config.experiment.rollout.rate == 0) or (should_save_ckpt and ckpt_reason == "time")
             if config.experiment.rollout.enabled and (epoch > config.experiment.rollout.warmstart) and rollout_check:
