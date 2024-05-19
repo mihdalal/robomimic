@@ -636,7 +636,8 @@ def run_dagger_rollout(
         horizon,
         use_goals=False,
         terminate_on_success=False,
-        resampling_strategy='all'
+        resampling_strategy='all',
+        dagger_traj_filter='all'
     ):
     """
     Runs a rollout in an environment with the current network parameters.
@@ -684,7 +685,7 @@ def run_dagger_rollout(
     state_dicts = [state_dict.copy() for state_dict in state_dicts]
     trajs = []
     for state_dict in state_dicts:
-        trajs.append(dict(obs=[], collision_state=[], step=[], success=[], info=[], initial_state=[state_dict]))
+        trajs.append(dict(obs=[], collision_state=[], step=[], success=[], info=[], initial_state=[]))
     has_terminated=[False for _ in range(env.num_envs)]
     try:
         for step_i in range(horizon):
@@ -729,82 +730,52 @@ def run_dagger_rollout(
         print("WARNING: got rollout exception")
     trajs_to_return = []
     for traj in trajs:
-        # only relabel trajectories in which the agent actually collided or failed to reach the goal
-        if traj['info'][-1]['train/has_collided'] or not traj['success'][-1]['task']:
+        if dagger_traj_filter == 'collide_or_fail':
+            traj_cond = traj['info'][-1]['train/has_collided'] or not traj['success'][-1]['task']
+        elif dagger_traj_filter == 'collide':
+            traj_cond = traj['info'][-1]['train/has_collided']
+        elif dagger_traj_filter == 'fail':
+            traj_cond = not traj['success'][-1]['task']
+        else:
+            traj_cond = True
+        if traj_cond:
             obs = traj['obs']
             obs = {k: np.array([o[k] for o in obs]) for k in obs[0]}
             traj['obs'] = obs   
             traj['collision_state'] = np.array(traj['collision_state'])
             traj['step'] = np.array(traj['step'])
+            traj['success'] = {k: np.array([s[k] for s in traj['success']]) for k in traj['success'][0]}
             trajs_to_return.append(traj)
     return trajs_to_return
     
-def replan_from_states(env, trajs, resampling_strategy, num_trajs_to_relabel, dataset, data_grp, online_epoch):
+def replan_from_states(env, trajs, resampling_strategy, dataset, data_grp, online_epoch, num_steps_to_keep_before_collision):
     relabeling_trajs = []
     if resampling_strategy == 'collision':
         for traj in trajs:
+            # remove info from traj keys
+            traj = {k: v for k,v in traj.items() if k != 'info'}
             for i in range(len(traj['obs'])):
-                # TODO: need to pick the state before this (assuming its collision free as well)
                 if traj['collision_state'][i]:
-                    new_traj = dict(
-                        start_config=traj['obs']['current_angles'][i],
-                        goal_config=traj['obs']['goal_angles'][i],
-                        step = traj['step'][i]
-                    )
+                    # iterate till we find first collision state, then keep the trajectory from num_steps_to_keep_before_collision till collision
+                    start = max(0, i - num_steps_to_keep_before_collision)
+                    new_traj = TensorUtils.map_ndarray(traj, lambda x: x[start:i+1])
                     relabeling_trajs.append(new_traj)
-    elif resampling_strategy == 'random':
-        total_steps = sum([len(traj['obs']) for traj in trajs])
-        step_indices = np.random.choice(total_steps, num_trajs_to_relabel, replace=False)
-        step_idx = 0
-        for traj in trajs:
-            for i in range(len(traj['obs'])):
-                if step_idx in step_indices:
-                    new_traj = dict(
-                        start_config=traj['obs']['current_angles'][i],
-                        goal_config=traj['obs']['goal_angles'][i],
-                        step = traj['step'][i]
-                    )
-                    relabeling_trajs.append(new_traj)
-                step_idx += 1
+                    break
+    else:
+        relabeling_trajs = trajs
     output_trajs = {}
     total_samples = 0
-    if resampling_strategy == 'all':
-        num_relabels = 0
-        for chunk in tqdm(range(0, len(trajs), env.num_envs)):
-            max_len = min(len(trajs) - chunk, env.num_envs)
-            chunk_trajs = trajs[chunk:chunk+max_len]
-            out = env.env_method_pass_idx("relabel_traj_with_mp", chunk_trajs, indices=range(max_len))
-            for env_idx in range(max_len):
-                env_traj = out[env_idx]
-                if len(env_traj) > 0:
-                    output_trajs[f"demo_{online_epoch}_{chunk+env_idx}"] = env_traj
-                    total_samples += write_trajectory_to_dataset(None, env_traj, data_grp, f"demo_{online_epoch}_{chunk+env_idx}")
-                    num_relabels += 1
-    else:
-        # NOTE: this is adding trajectories completely out of order, will not work with sequence models! only MLP
-        for chunk in range(0, len(relabeling_trajs), env.num_envs):
-            max_len = min(len(relabeling_trajs) - chunk, env.num_envs)
-            chunk_trajs = relabeling_trajs[chunk:max_len]
-            start_configs = [chunk_trajs[i]['start_config'] for i in range(len(chunk_trajs))]
-            goal_configs = [chunk_trajs[i]['goal_config'] for i in range(len(chunk_trajs))]
-            num_waypoints = [np.maximum(50-chunk_trajs[i]['step'], 5) for i in range(len(chunk_trajs))]
-            out = env.env_method_pass_idx("finish_traj_with_mp", start_configs, goal_configs, num_waypoints, indices=range(max_len))
-            traj = {'actions': [], 'obs': [], 'states':[]}
-            for env_idx in range(max_len):
-                env_traj = out[env_idx]
-                if len(env_traj) > 0:
-                    # take first action:
-                    traj['actions'].append(env_traj['actions'][0])
-                    traj['obs'].append(env_traj['obs'][0])
-                    traj['states'].append(env_traj['states'][0])
-            if len(traj['obs']) > 0:
-                # convert to numpy arrays
-                traj['actions'] = np.array(traj['actions'])
-                traj['obs'] = {k: np.array([o[k] for o in traj['obs']]) for k in traj['obs'][0]}
-                traj['states'] = np.array(traj['states'])
-                traj['num_samples'] = traj['actions'].shape[0]
-                total_samples += write_trajectory_to_dataset(None, traj, data_grp, f"demo_{online_epoch}_{chunk}")
-                output_trajs[f"demo_{online_epoch}_{chunk}"] = traj
+    num_relabels = 0
+    for chunk in tqdm(range(0, len(trajs), env.num_envs)):
+        max_len = min(len(trajs) - chunk, env.num_envs)
+        chunk_trajs = trajs[chunk:chunk+max_len]
+        out = env.env_method_pass_idx("relabel_traj_with_mp", chunk_trajs, indices=range(max_len))
+        for env_idx in range(max_len):
+            env_traj = out[env_idx]
+            if len(env_traj) > 0:
+                output_trajs[f"demo_{online_epoch}_{chunk+env_idx}"] = env_traj
+                total_samples += write_trajectory_to_dataset(None, env_traj, data_grp, f"demo_{online_epoch}_{chunk+env_idx}")
+                num_relabels += 1
     data_grp.attrs["env_args"] = json.dumps(env.env_method("serialize")[0], indent=4)
     data_grp.attrs["total"] = total_samples
     # close the hdf5 file
@@ -823,7 +794,8 @@ def collect_online_dataset(
         verbose=False,
         data_writer=None,
         resampling_strategy='all',
-        num_trajs_to_relabel=100,
+        num_steps_to_keep_before_collision=10,
+        dagger_traj_filter='all'
     ):
     """
     A helper function used in the train loop to conduct evaluation rollouts per environment
@@ -879,14 +851,15 @@ def collect_online_dataset(
                 horizon=horizon,
                 use_goals=use_goals,
                 terminate_on_success=terminate_on_success,
-                resampling_strategy=resampling_strategy
+                resampling_strategy=resampling_strategy,
+                dagger_traj_filter=dagger_traj_filter
             )
             dagger_trajs.extend(trajs)
         data = replan_from_states(
             env=env,
             trajs=dagger_trajs,
             resampling_strategy=resampling_strategy,
-            num_trajs_to_relabel=num_trajs_to_relabel,
+            num_steps_to_keep_before_collision=num_steps_to_keep_before_collision,
             dataset=data_writer,
             data_grp=data_grp,
             online_epoch=online_epoch

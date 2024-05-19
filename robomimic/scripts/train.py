@@ -429,35 +429,39 @@ def train(config, device, ckpt_path=None, ckpt_dict=None, output_dir=None, start
                     terminate_on_success=config.experiment.rollout.terminate_on_success,
                     online_epoch=online_epoch,
                     resampling_strategy=config.experiment.dagger.resampling_strategy,
-                    num_trajs_to_relabel=config.experiment.dagger.num_trajs_to_relabel,
+                    num_steps_to_keep_before_collision=config.experiment.dagger.num_steps_to_keep_before_collision,
                     data_writer=data_writer,
+                    dagger_traj_filter=config.experiment.dagger.dagger_traj_filter,
                 )
-                
-                config.unlock()
-                config.train.data = dataset_path
-                config.lock()
-                split_train_val_from_hdf5(dataset_path, val_ratio=0.0)
-                os.system(f'python robomimic/scripts/get_dataset_info.py --dataset {dataset_path}')
-                additional_trainset, additional_validset = TrainUtils.load_data_for_training(
-                    config, obs_keys=shape_meta["all_obs_keys"])
-                train_datasets.append(additional_trainset)
-                trainset = torch.utils.data.ConcatDataset(train_datasets)
-                
-                # this is for balanced sampling which I have not implemented yet
-                train_dataset_lengths.append(len(additional_trainset))
-                valid_dataset_lengths.append(len(additional_validset))
-                
-                # train_sampler = BalancedConcatSampler(train_dataset_lengths, batch_size=config.train.batch_size)
-                # valid_sampler = BalancedConcatSampler(valid_dataset_lengths, batch_size=config.train.batch_size)
-                train_loader = DataLoader(
-                    dataset=trainset,
-                    batch_size=config.train.batch_size,
-                    shuffle=(train_sampler is None),
-                    num_workers=config.train.num_data_workers,
-                    drop_last=True,
-                    pin_memory=True,
-                    persistent_workers=True if config.train.num_data_workers > 0 else False,
-                )
+                if len(data) > 0:
+                    config.unlock()
+                    config.train.data = dataset_path
+                    config.lock()
+                    split_train_val_from_hdf5(dataset_path, val_ratio=0.0)
+                    os.system(f'python robomimic/scripts/get_dataset_info.py --dataset {dataset_path}')
+                    additional_trainset, additional_validset = TrainUtils.load_data_for_training(
+                        config, obs_keys=shape_meta["all_obs_keys"])
+                    train_datasets.append(additional_trainset)
+                    train_dataset_lengths.append(len(additional_trainset))
+                    if config.experiment.dagger.data_mode == 'online_data_only':
+                        torch.utils.data.ConcatDataset(train_datasets[1:])
+                        train_sampler = BalancedConcatSampler(train_dataset_lengths[1:], batch_size=config.train.batch_size)
+                    elif config.experiment.dagger.data_mode == 'latest_data_only':
+                        trainset = torch.utils.data.ConcatDataset(train_datasets[-1])
+                        train_sampler = BalancedConcatSampler(train_dataset_lengths[-1:], batch_size=config.train.batch_size)
+                    else:
+                        trainset = torch.utils.data.ConcatDataset(train_datasets)
+                        train_sampler = BalancedConcatSampler(train_dataset_lengths, batch_size=config.train.batch_size)
+                    
+                    train_loader = DataLoader(
+                        dataset=trainset,
+                        batch_size=config.train.batch_size,
+                        shuffle=(train_sampler is None),
+                        num_workers=config.train.num_data_workers,
+                        drop_last=True,
+                        pin_memory=True,
+                        persistent_workers=True if config.train.num_data_workers > 0 else False,
+                    )
         step_log = TrainUtils.run_epoch(
             model=model,
             data_loader=train_loader,

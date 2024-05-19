@@ -126,7 +126,9 @@ class BCConfig(BaseConfig):
         self.experiment.dagger.online_epoch_rate = 50 # how often to run dagger
         self.experiment.dagger.num_episodes = 10 # this is per env so 10*num_envs overall
         self.experiment.dagger.resampling_strategy = "all" # all, collision, or random
-        self.experiment.dagger.num_trajs_to_relabel = 1000 # how many trajs to relabel (number of mp calls)
+        self.experiment.dagger.num_steps_to_keep_before_collision = 10 # how many steps to keep before collision
+        self.experiment.dagger.data_mode = 'all' # all, latest_data_only, or online_data_only - decides on-policy'ness of dagger
+        self.experiment.dagger.dagger_traj_filter = 'all' # all, collide, fail, collide or fail - which trajectories to relabel
         
         
         

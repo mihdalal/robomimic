@@ -4,6 +4,7 @@ to provide a standardized environment API for training policies and interacting
 with metadata present in datasets.
 """
 from collections import OrderedDict
+import traceback
 import gym
 import json
 from copy import deepcopy
@@ -323,22 +324,23 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
         for step in tqdm(range(len(traj['obs']['current_angles']))):
             mp_kwargs_ = mp_kwargs.copy()
             self.env.set_robot_joint_state(traj['obs']['current_angles'][step])
-            mp_kwargs_['initial_planning_time'] = 0.01
-            mp_kwargs_['maximum_planning_time'] = 0.01
+            mp_kwargs_['initial_planning_time'] = .01
+            mp_kwargs_['maximum_planning_time'] = .01
             mp_kwargs_['force_goal_reaching'] = True # this should already have been true in the dataset though
             try:
                 (
                     plan_actions,
                     _,
-                    plan_obs,
+                    _,
                     planning_states,
                     planner,
-                    pdef,
-                    failure_reason,
+                    _,
+                    _,
                 ) = self.env.mp_to_joint_target(
-                    goal_config, planner=planner, pdef=pdef, **mp_kwargs_
+                    goal_config, planner=planner, pdef=pdef,  **mp_kwargs_
                 )
             except:
+                print(traceback.format_exc())
                 plan_actions = None
             # assumption: if original plan successful, can re-plan easily from other states
             if plan_actions is None:
