@@ -418,7 +418,7 @@ def train(config, device, ckpt_path=None, ckpt_dict=None, output_dir=None, start
                 dataset_path = os.path.join(dagger_data_dir, f"online_dataset_{epoch}.hdf5")
                 data_writer = h5py.File(dataset_path, "w")
                 online_epoch = epoch // config.experiment.dagger.online_epoch_rate
-                data = TrainUtils.collect_online_dataset(
+                total_dagger_samples = TrainUtils.collect_online_dataset(
                     policy=rollout_model,
                     envs=envs,
                     horizon=config.experiment.rollout.horizon,
@@ -432,7 +432,7 @@ def train(config, device, ckpt_path=None, ckpt_dict=None, output_dir=None, start
                     data_writer=data_writer,
                     dagger_traj_filter=config.experiment.dagger.dagger_traj_filter,
                 )
-                if len(data) > 0:
+                if total_dagger_samples > 0:
                     config.unlock()
                     config.train.data = dataset_path
                     config.lock()

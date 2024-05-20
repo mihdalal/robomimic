@@ -763,7 +763,6 @@ def replan_from_states(env, trajs, resampling_strategy, dataset, data_grp, onlin
                     break
     else:
         relabeling_trajs = trajs
-    output_trajs = {}
     total_samples = 0
     num_relabels = 0
     for chunk in tqdm(range(0, len(trajs), env.num_envs)):
@@ -773,14 +772,13 @@ def replan_from_states(env, trajs, resampling_strategy, dataset, data_grp, onlin
         for env_idx in range(max_len):
             env_traj = out[env_idx]
             if len(env_traj) > 0:
-                output_trajs[f"demo_{online_epoch}_{chunk+env_idx}"] = env_traj
                 total_samples += write_trajectory_to_dataset(None, env_traj, data_grp, f"demo_{online_epoch}_{chunk+env_idx}")
                 num_relabels += 1
     data_grp.attrs["env_args"] = json.dumps(env.env_method("serialize")[0], indent=4)
     data_grp.attrs["total"] = total_samples
     # close the hdf5 file
     dataset.close()
-    return output_trajs
+    return total_samples
 
 def collect_online_dataset(
         policy,
@@ -833,6 +831,7 @@ def collect_online_dataset(
     assert isinstance(policy, RolloutPolicy)
 
     data_grp = data_writer.create_group("data")
+    total_samples = 0
     for env_name, env in envs.items():
         for env_idx in range(env.num_envs):
             env.env_method_pass_idx("set_to_dagger_sampling", env.num_envs, indices=[env_idx])
@@ -855,7 +854,7 @@ def collect_online_dataset(
                 dagger_traj_filter=dagger_traj_filter
             )
             dagger_trajs.extend(trajs)
-        data = replan_from_states(
+        total_samples = replan_from_states(
             env=env,
             trajs=dagger_trajs,
             resampling_strategy=resampling_strategy,
@@ -865,5 +864,5 @@ def collect_online_dataset(
             online_epoch=online_epoch
         )
         env.env_method("set_to_env_original")
-    return data
+    return total_samples
         
