@@ -109,10 +109,11 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
         self.demos = None
         self.num_envs = 1
         self.num_resets = 0
+        self.dagger_resets = 0
         self.initial_states = None
         self.ep = 'demo_-1'
     
-    def set_env_specific_params(self, split, num_envs, env_idx):
+    def set_env_specific_params(self, split, num_envs, shift, env_idx):
         """
         Note this sets params for the parallel envs to sample different demonstrations to init from
         This needs to be run before running the env!
@@ -133,7 +134,7 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
             if num_envs == 1:
                 env_idx = 0 # only one env so don't shift
             else:
-                env_idx = env_idx - num_envs
+                env_idx = env_idx - shift
         self.demos = [demos[i] for i in inds if i % num_envs == env_idx]
         print("env idx: {}, split: {}, demos: {}".format(env_idx, split, len(self.demos)))
         self.num_envs = num_envs
@@ -248,7 +249,9 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
         self.saved_demos = self.demos.copy() if self.demos is not None else self.demos
         self.saved_split = self.split
         self.saved_initial_states = self.initial_states.copy() if self.initial_states is not None else self.initial_states
-        self.dataset_path = self.dataset_path    
+        self.dataset_path = self.dataset_path
+        self.saved_num_resets = self.num_resets
+        self.num_resets = self.dagger_resets    
         f = h5py.File(self.dataset_path, "r", libver='latest', swmr=True)
         self.hdf5_file = f
         filter_key = 'train'
@@ -271,6 +274,8 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
         self.demos = self.saved_demos
         self.split = self.saved_split
         self.initial_states = self.saved_initial_states
+        self.dagger_resets = self.num_resets
+        self.num_resets = self.saved_num_resets
     
     def relabel_traj_with_mp(self, trajs, env_idx):
         """
