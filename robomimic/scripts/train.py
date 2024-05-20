@@ -16,6 +16,7 @@ Args:
 """
 
 import argparse
+import gc
 import json
 import numpy as np
 import time
@@ -233,7 +234,7 @@ def train(config, device, ckpt_path=None, ckpt_dict=None, output_dir=None, start
                     for env_idx in range(config.experiment.num_envs):
                         split = 'valid'
                         num_split_envs = 1 
-                        env.env_method_pass_idx("set_env_specific_params", split, num_split_envs, indices=[env_idx])
+                        env.env_method_pass_idx("set_env_specific_params", split, num_split_envs, shift=0, indices=[env_idx])
                 envs[env_name] = env
                 print(envs[env_name])
 
@@ -451,7 +452,9 @@ def train(config, device, ckpt_path=None, ckpt_dict=None, output_dir=None, start
                     else:
                         trainset = torch.utils.data.ConcatDataset(train_datasets)
                         train_sampler = BalancedConcatSampler(train_dataset_lengths, batch_size=config.train.batch_size)
-                    
+                    # clear current train_loader and create a new one
+                    del train_loader
+                    gc.collect()
                     train_loader = DataLoader(
                         dataset=trainset,
                         batch_size=config.train.batch_size,

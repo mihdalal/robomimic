@@ -354,11 +354,7 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
             return {}
         # shorten obs to same length as actions
         obs = {k:v[:len(actions)] for k, v in traj['obs'].items()}  
-        pad = int(obs['saved_params'][0, -1])
-        # we pad saved params because different envs can have different sized pcd params and we need to pad them to the same size
-        # here we undo the padding and remove the last element which is the padding amount
-        obs['saved_params'] = obs['saved_params'][0:1, :-pad-1]
-        obs["compute_pcd_params"] = obs["saved_params"][:, 14:] # remove q and g from pcd params, they will need to be loaded in separately anyways
+        obs["compute_pcd_params"] = initial_state['states'][14:]
         states = np.array(states).astype(np.float32)[0:1]
         actions = np.array(actions).astype(np.float32) 
         output_traj = {
@@ -430,11 +426,6 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
                 )[0]
             if 'angles' in k and self.pcd_params.get('normalize_joint_angles', False):
                 ob_return[k] = normalize_franka_joints(ob_return[k])
-        if saved_pcd_params is not None:
-            # pad to 10000 and also include how much padding was added
-            pad = 10000 - saved_pcd_params.shape[0] - 1
-            saved_pcd_params = np.concatenate([saved_pcd_params, np.zeros((pad)), [pad]], axis=0, dtype=np.float32)
-            ob_return['saved_params'] = saved_pcd_params
         return ob_return
 
     def get_state(self):
