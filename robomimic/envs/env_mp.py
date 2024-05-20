@@ -118,34 +118,24 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
         This needs to be run before running the env!
         """
         self.split = split
-        if split is not None:
-            f = h5py.File(self.dataset_path, "r", libver='latest', swmr=True)
-            self.hdf5_file = f
-            filter_key = split
+        f = h5py.File(self.dataset_path, "r", libver='latest', swmr=True)
+        self.hdf5_file = f
+        filter_key = split
 
-            # list of all demonstration episodes (sorted in increasing number order)
-            if filter_key is not None:
-                print("using filter key: {}".format(filter_key))
-                demos = [elem.decode("utf-8") for elem in np.array(f["mask/{}".format(filter_key)])]
-            else:
-                demos = list(f["data"].keys())
-            inds = np.argsort([int(elem[5:]) for elem in demos])
-            if split == 'valid':
-                if num_envs == 1:
-                    env_idx = 0 # only one env so don't shift
-                else:
-                    env_idx = env_idx - num_envs
-            self.demos = [demos[i] for i in inds if i % num_envs == env_idx]
-            print("env idx: {}, split: {}, demos: {}".format(env_idx, split, len(self.demos)))
+        # list of all demonstration episodes (sorted in increasing number order)
+        if filter_key is not None:
+            print("using filter key: {}".format(filter_key))
+            demos = [elem.decode("utf-8") for elem in np.array(f["mask/{}".format(filter_key)])]
         else:
-            self.demos = None
-            import neural_mp
-            neural_mp_path = os.path.dirname(neural_mp.__file__)[:-len("neural_mp")]
-            self.initial_states = os.path.join(neural_mp_path, f'init_states/{self.env.cfg.task.env_name}.npy')
-            self.initial_states = np.load(self.initial_states, allow_pickle=True)
-            env_idx = env_idx - num_envs
-            self.initial_states = [self.initial_states[i]['states'] for i in range(len(self.initial_states)) if i % num_envs == env_idx]
-            print("env idx: {}, split: {}, initial states: {}".format(env_idx, split, len(self.initial_states)))
+            demos = list(f["data"].keys())
+        inds = np.argsort([int(elem[5:]) for elem in demos])
+        if split == 'valid':
+            if num_envs == 1:
+                env_idx = 0 # only one env so don't shift
+            else:
+                env_idx = env_idx - num_envs
+        self.demos = [demos[i] for i in inds if i % num_envs == env_idx]
+        print("env idx: {}, split: {}, demos: {}".format(env_idx, split, len(self.demos)))
         self.num_envs = num_envs
 
     def step(self, action):
@@ -324,8 +314,8 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
         for step in tqdm(range(len(traj['obs']['current_angles']))):
             mp_kwargs_ = mp_kwargs.copy()
             self.env.set_robot_joint_state(traj['obs']['current_angles'][step])
-            mp_kwargs_['initial_planning_time'] = .01
-            mp_kwargs_['maximum_planning_time'] = .01
+            mp_kwargs_['initial_planning_time'] = .1
+            mp_kwargs_['maximum_planning_time'] = .1
             mp_kwargs_['force_goal_reaching'] = True # this should already have been true in the dataset though
             try:
                 (

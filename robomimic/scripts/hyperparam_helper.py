@@ -60,127 +60,54 @@ def make_generator(config_file, script_file, wandb_proj_name, output_dir):
 
     generator.add_param(
         key="train.data",
-        name="ds",
+        name="",
         group=1,
         values=[
-            "/home/mdalal/research/neural_mp/neural_mp/datasets/table_1M_pcd_params_obs_delta_True_controller_col_check_dist_1cm_p_time_20s_many_bugfixes.hdf5",
-            # "/home/mdalal/research/neural_mp/neural_mp/datasets/table_1M_pcd_params_obs_delta_False_controller_col_check_dist_1cm_p_time_20s_many_bugfixes.hdf5"
+            "/home/mdalal/research/neural_mp/neural_mp/datasets/table_bins_10K_pcd_params_obs_delta_True_single_obs_task_oriented_1.0_save_planner.hdf5",
         ],
-        value_names=[
-            "delta_True",
-            # "delta_False",
-        ]
     )
 
     generator.add_param(
-        key="experiment.pcd_params.relabel_goal_angles",
-        name="rga",
+        key="experiment.dagger.dagger_traj_filter",
+        name="dtf",
         group=2,
-        values=[True, False],
+        values=[
+            'all',
+            'collide',
+            'fail',
+            'collide_or_fail'
+        ],
+    )
+    
+    generator.add_param(
+        key="experiment.dagger.data_mode",
+        name="dm",
+        group=3,
+        values=[
+            'all',
+            'online_data_only',
+            'latest_data_only'
+        ],
+    )
+    
+    generator.add_param(
+        key="experiment.dagger.resampling_strategy",
+        name="rs",
+        group=4,
+        values=[
+            # 'all',
+            'collision'
+        ],
     )
 
-    # generator.add_param(
-    #     key="train.batch_size",
-    #     name="bs", 
-    #     group=2, 
-    #  #    values=[128],
-    #     values=[128],
-    #  #    values=[16],
-    # )
-
-    # generator.add_param(
-    #     key="algo.optim_params.policy.learning_rate.initial", 
-    #     name="plr", 
-    #     group=3, 
-    #     values=[1e-4, 5e-4, 1e-3], 
-    #  #    values=[1e-4], 
-    # )
-
-    # generator.add_param(
-    #     key="observation.encoder.pcd.core_kwargs.backbone_kwargs.encoder_size", 
-    #     name="size", 
-    #     group=4, 
-    #     values=['small', 'medium', 'large'], 
-    #     # values=['small'], 
-    # )
-    
-    # generator.add_param(
-    #     key="algo.loss.collision_weight",
-    #     name="cw",
-    #     group=5,
-    #     # values=[1.0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7],
-    #     values=[0.0, 1.0, 1e1, 1e2],
-    # )
-    
-    # generator.add_param(
-    #     key="algo.loss.collision_loss_params.hinge_loss",
-    #     name="",
-    #     group=4,
-    #     values=[False],
-    # )
-    
-    # generator.add_param(
-    #     key="algo.loss.collision_loss_params.reduction",
-    #     name="red",
-    #     group=6,
-    #     values=["mean", "sum", "max"],
-    # )
-    
-    # generator.add_param(
-    #     key="algo.loss.collision_loss_params.margin",
-    #     name="marg",
-    #     group=7,
-    #     values=[0, .01, .03, .05],
-    # )
-    
-    #generator.add_param(
-    #    key="train.seq_length", 
-    #    name="sl", 
-    #    group=2, 
-    #    values=[2, 4, 8], 
-    #)
-    #generator.add_param(
-    #    key="algo.rnn.horizon",
-    #    name="", 
-    #    group=2, 
-    #    values=[2, 4, 8], 
-    #)
-
-    # LR - 1e-3, 1e-4
-    #generator.add_param(
-    #    key="algo.optim_params.policy.learning_rate.initial", 
-    #    name="plr", 
-    #    group=4, 
-    #    values=[1e-3, 5e-4, 1e-4], 
-    #)
-
-    # RNN dim 400 + MLP dims (1024, 1024) vs. RNN dim 1000 + empty MLP dims ()
-    # generator.add_param(
-    #     key="algo.rnn.hidden_dim", 
-    #     name="rnnd", 
-    #     group=3, 
-    #     values=[
-    #         400, 
-    #         1000,
-    #     ], 
-    # )
-
-    # generator.add_param(
-    #     key="observation.modalities.obs.low_dim",
-    #     name="ld",
-    #     group=2,
-    #     values=[[], ['current_angles'], ['goal_angles'], ['current_angles', 'goal_angles']],
-    #     value_names=['n', 'q', 'g', 'qg'],
-    # )
-
-    # generator.add_param(
-    #     key="experiment.pcd_params.target_pcd_type",
-    #     name="tpt",
-    #     group=3,
-    #     values=['joint', 'ee'],
-    #     value_names=['j', 'e'],
-    # )
-
+    generator.add_param(
+        key="experiment.dagger.num_steps_to_keep_before_collision",
+        name="nstkbc",
+        group=5,
+        values=[
+            1, 5, 10, 25
+        ],
+    )
 
     return generator
 
