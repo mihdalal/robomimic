@@ -213,6 +213,7 @@ def train(config, device, ckpt_path=None, ckpt_dict=None, output_dir=None, start
                 config_path = os.path.join(log_dir, 'config.json')
                 json.dump(config, open(config_path, 'w'), indent=4)
                 env_meta['env_kwargs']['cfg']['task']['setup_cameras'] = True # set up cameras for rendering
+                use_env_idx = True 
                 if config.experiment.num_envs > 1:
                     env_fns = []
                     for env_idx in range(config.experiment.num_envs):
@@ -228,13 +229,13 @@ def train(config, device, ckpt_path=None, ckpt_dict=None, output_dir=None, start
                             split = 'valid'
                             num_split_envs = 15 
                             shift = 5
-                        env.env_method_pass_idx("set_env_specific_params", split, num_split_envs, shift, indices=[env_idx])
+                        env.env_method_pass_idx("set_env_specific_params", split, num_split_envs, shift, use_env_idx, indices=[env_idx])
                 else:
                     env = DummyVecEnvWrapper([lambda: make_env(env_meta, shape_meta['use_images'], render_video, pcd_params, mpinets_enabled, dataset_path, config_path)])
                     for env_idx in range(config.experiment.num_envs):
                         split = 'valid'
                         num_split_envs = 1 
-                        env.env_method_pass_idx("set_env_specific_params", split, num_split_envs, shift=0, indices=[env_idx])
+                        env.env_method_pass_idx("set_env_specific_params", split, num_split_envs, shift=0, use_env_idx=use_env_idx, indices=[env_idx])
                 envs[env_name] = env
                 print(envs[env_name])
 

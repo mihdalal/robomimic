@@ -113,7 +113,7 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
         self.initial_states = None
         self.ep = 'demo_-1'
     
-    def set_env_specific_params(self, split, num_envs, shift, env_idx):
+    def set_env_specific_params(self, split, num_envs, shift, use_env_idx, env_idx):
         """
         Note this sets params for the parallel envs to sample different demonstrations to init from
         This needs to be run before running the env!
@@ -130,12 +130,14 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
         else:
             demos = list(f["data"].keys())
         inds = np.argsort([int(elem[5:]) for elem in demos])
+        self.demos = [demos[i] for i in inds]
         if split == 'valid':
             if num_envs == 1:
                 env_idx = 0 # only one env so don't shift
             else:
                 env_idx = env_idx - shift
-        self.demos = [demos[i] for i in inds if i % num_envs == env_idx]
+        if use_env_idx:
+            self.demos = [demos[i] for i in range(len(demos)) if i % num_envs == env_idx]
         print("env idx: {}, split: {}, demos: {}".format(env_idx, split, len(self.demos)))
         self.num_envs = num_envs
 
@@ -316,11 +318,12 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
         target_angles = self.hdf5_file["data/{}/obs/goal_angles".format(ep)][()][0]
         planner, pdef = self.env.load_planner_from_data(data_path, current_angles, target_angles)
         
-        for step in tqdm(range(len(traj['obs']['current_angles']))):
+        for step in range(len(traj['obs']['current_angles'])):
             mp_kwargs_ = mp_kwargs.copy()
             self.env.set_robot_joint_state(traj['obs']['current_angles'][step])
             mp_kwargs_['initial_planning_time'] = .1
             mp_kwargs_['maximum_planning_time'] = .1
+            mp_kwargs_['execute_plan'] = False # assume we don't need to execute the plan
             mp_kwargs_['force_goal_reaching'] = True # this should already have been true in the dataset though
             try:
                 (
