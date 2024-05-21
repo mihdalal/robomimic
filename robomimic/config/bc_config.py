@@ -129,6 +129,6 @@ class BCConfig(BaseConfig):
         self.experiment.dagger.num_steps_to_keep_before_collision = 10 # how many steps to keep before collision
         self.experiment.dagger.data_mode = 'all' # all, latest_data_only, or online_data_only - decides on-policy'ness of dagger
         self.experiment.dagger.dagger_traj_filter = 'all' # all, collide, fail, collide or fail - which trajectories to relabel
-        
+        self.experiment.dagger.num_trajs_to_relabel=1 # for backwards compatibility only, not used
         
         
