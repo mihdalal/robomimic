@@ -206,7 +206,7 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
         self.current_step += 1
         return self.get_observation(obs), reward, self.is_done(), trunc, info
 
-    def reset(self, seed=None, reset_with_plan=False):
+    def reset(self, seed=None, reset_with_plan=False, reset_with_scene=True):
         """
         Reset environment.
 
@@ -240,10 +240,9 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
             return self.reset_to({"states": self.initial_states[idx]}), reset_infos
         else:
             print("resetting to random state")
-            self._current_obs = self.env.reset(reset_with_plan=reset_with_plan)
+            self._current_obs = self.env.reset(reset_with_plan=reset_with_plan, reset_with_scene=reset_with_scene)
             return self.get_observation(self._current_obs), reset_infos
-        
-    
+
     def set_to_dagger_sampling(self, num_envs, env_idx):
         """
         Set the environment to sampling train states only.
