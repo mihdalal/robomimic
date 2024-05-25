@@ -116,7 +116,7 @@ def playback_trajectory_with_env(
     assert not (render and write_video)
 
     # load the initial state
-    env.reset()
+    env.reset(reset_with_scene=False)
     env.reset_to(initial_state)
 
     traj_len = states.shape[0]
