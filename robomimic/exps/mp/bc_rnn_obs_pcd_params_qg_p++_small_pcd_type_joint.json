@@ -40,7 +40,7 @@
             "target_pcd_type": "joint",
             "noise_scale": 0.0
         },
-        "num_envs": 20
+        "num_envs": 10
     },
     "train": {
         "data": "/home/mdalal/research/neural_mp/neural_mp/datasets/robomimic_table_simple_1600_224_smoothed.hdf5",
