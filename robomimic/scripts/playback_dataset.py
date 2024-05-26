@@ -188,7 +188,11 @@ def playback_trajectory_with_obs(
             if len(pcd_keys) > 0:
                 frames = []
                 for pcd_key in pcd_keys:
-                    pcd = compute_full_pcd(traj_grp[f'obs/{pcd_key}'][()][i:i+1], num_robot_points=256, num_obstacle_points=4096)
+                    current_angles = traj_grp['obs/current_angles'][()][i:i+1]
+                    goal_angles = traj_grp['obs/goal_angles'][()][i:i+1]
+                    scene_pcd_params = traj_grp['obs/compute_pcd_params'][()][0:1]
+                    combined_params = np.concatenate([current_angles, goal_angles, scene_pcd_params], axis=1)
+                    pcd = compute_full_pcd(combined_params, num_robot_points=2048, num_obstacle_points=4096)
                     frame = render_pointcloud(pcd[0])
                     frames.append(frame)
                 frame = np.concatenate(frames, axis=1)
