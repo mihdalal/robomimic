@@ -333,6 +333,7 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
                     planner,
                     _,
                     _,
+                    _,
                 ) = self.env.mp_to_joint_target(
                     goal_config, planner=planner, pdef=pdef,  **mp_kwargs_
                 )
