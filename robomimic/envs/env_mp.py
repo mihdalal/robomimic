@@ -28,15 +28,15 @@ import numpy as np
 from pytorch3d.structures import Pointclouds
 from pytorch3d.vis.plotly_vis import AxisArgs, plot_batch_individually, plot_scene
 from pytorch3d.renderer import (
-    look_at_view_transform,
-    FoVOrthographicCameras, 
-    PointsRasterizationSettings,
-    PointsRenderer,
-    PulsarPointsRenderer,
-    PointsRasterizer,
-    AlphaCompositor,
-    NormWeightedCompositor
-)
+     look_at_view_transform,
+     FoVOrthographicCameras, 
+     PointsRasterizationSettings,
+     PointsRenderer,
+     PulsarPointsRenderer,
+     PointsRasterizer,
+     AlphaCompositor,
+     NormWeightedCompositor
+ )
 
 from neural_mp.envs.franka_pybullet_env import depth_to_rgb, compute_full_pcd
 import h5py
@@ -356,7 +356,7 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
             return {}
         # shorten obs to same length as actions
         obs = {k:v[:len(actions)] for k, v in traj['obs'].items()}  
-        obs["compute_pcd_params"] = initial_state['states'][14:]
+        obs["compute_pcd_params"] = initial_state['states'][15:]
         states = np.array(states).astype(np.float32)[0:1]
         actions = np.array(actions).astype(np.float32) 
         output_traj = {
