@@ -315,10 +315,12 @@ def train(config, device, ckpt_path=None, ckpt_dict=None, output_dir=None, start
         config.train.data = dataset_path # reset the dataset path
         config.lock()
         trainset = torch.utils.data.ConcatDataset(trainsets)
-        validset = torch.utils.data.ConcatDataset(validsets)
+        if config.experiment.validate:
+            validset = torch.utils.data.ConcatDataset(validsets)
     train_dataset_lengths = [len(trainset)]
     train_datasets = [trainset]
-    valid_dataset_lengths = [len(validset)]
+    if config.experiment.validate:
+        valid_dataset_lengths = [len(validset)]
     if ddp:
         train_sampler = torch.utils.data.distributed.DistributedSampler(trainset,
                                                                     num_replicas=world_size,
@@ -552,6 +554,33 @@ def train(config, device, ckpt_path=None, ckpt_dict=None, output_dir=None, start
                         tensor = torch.tensor([v])
                         dist.all_reduce(tensor, op=dist.ReduceOp.SUM, group=group)
         # Evaluate the model by by running rollouts
+        
+        TrainUtils.save_model(
+            model=model,
+            config=config,
+            env_meta=env_meta,
+            shape_meta=shape_meta,
+            ckpt_path=os.path.join(ckpt_dir, "model_latest.pth"),
+            obs_normalization_stats=obs_normalization_stats,
+            log_dir=log_dir,
+            ckpt_dir=ckpt_dir,
+            video_dir=video_dir,
+            epoch=epoch,
+        )
+        
+        if epoch % config.experiment.save.every_n_epochs == 0:
+            TrainUtils.save_model(
+                model=model,
+                config=config,
+                env_meta=env_meta,
+                shape_meta=shape_meta,
+                ckpt_path=os.path.join(ckpt_dir, "model_latest.pth"),
+                obs_normalization_stats=obs_normalization_stats,
+                log_dir=log_dir,
+                ckpt_dir=ckpt_dir,
+                video_dir=video_dir,
+                epoch=epoch,
+            )
 
         # do rollouts at fixed rate or if it's time to save a new ckpt
         if rank == 0:    

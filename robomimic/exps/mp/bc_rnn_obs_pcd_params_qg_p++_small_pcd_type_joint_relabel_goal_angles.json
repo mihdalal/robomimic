@@ -10,13 +10,13 @@
             "wandb_proj_name": "neural_mp"
         },
         "save": {
-            "enabled": false,
+            "enabled": true,
             "every_n_seconds": null,
             "every_n_epochs": 250,
             "epochs": [],
             "on_best_validation": false,
             "on_best_rollout_return": false,
-            "on_best_rollout_success_rate": true
+            "on_best_rollout_success_rate": false
         },
         "epoch_every_n_steps": 1000,
         "validation_epoch_every_n_steps": 1000,
@@ -38,7 +38,8 @@
             "num_robot_points": 2048,
             "num_obstacle_points": 4096,
             "target_pcd_type": "joint",
-            "noise_scale": 0.0
+            "noise_scale": 0.0,
+            "relabel_goal_angles": true
         },
         "num_envs": 20
     },
