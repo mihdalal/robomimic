@@ -10,7 +10,7 @@
             "wandb_proj_name": "neural_mp"
         },
         "save": {
-            "enabled": false,
+            "enabled": true,
             "every_n_seconds": null,
             "every_n_epochs": 250,
             "epochs": [],
