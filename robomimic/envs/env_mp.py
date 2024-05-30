@@ -380,7 +380,9 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
         Returns:
             observation (dict): observation dictionary after setting the simulator state
         """
+        self.env.restart_bullet()
         self.env.set_state(state["states"])
+        assert np.all(self.env.get_state() == state["states"])
         return self.get_observation(self.env.get_observation())
 
     def render(self, mode="rgb_array", height=512, width=512, camera_name=None, **kwargs):
