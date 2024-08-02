@@ -1,8 +1,8 @@
 {
     "algo_name": "bc",
     "experiment": {
-        "name": "bc",
-        "validate": true,
+        "name": "bc_mp_pcd_only",
+        "validate": false,
         "logging": {
             "terminal_output_to_txt": false,
             "log_tb": true,
@@ -12,7 +12,7 @@
         "save": {
             "enabled": true,
             "every_n_seconds": null,
-            "every_n_epochs": 50,
+            "every_n_epochs": 250,
             "epochs": [],
             "on_best_validation": false,
             "on_best_rollout_return": false,
@@ -27,9 +27,9 @@
         "keep_all_videos": true,
         "video_skip": 1,
         "rollout": {
-            "enabled": true,
+            "enabled": false,
             "n": 50,
-            "horizon": 150,
+            "horizon": 100,
             "rate": 50,
             "warmstart": 0,
             "terminate_on_success": true
@@ -51,7 +51,7 @@
         "hdf5_load_next_obs": false,
         "hdf5_normalize_obs": false,
         "hdf5_filter_key": "train",
-        "hdf5_validation_filter_key": "valid",
+        "hdf5_validation_filter_key": null,
         "seq_length": 1,
         "pad_seq_length": true,
         "frame_stack": 1,
@@ -62,7 +62,7 @@
         "goal_mode": null,
         "cuda": true,
         "batch_size": 16,
-        "num_epochs": 10000,
+        "num_epochs": 10000000,
         "seed": 1
     },
     "algo": {
@@ -86,8 +86,8 @@
             "cos_weight": 0.0
         },
         "actor_layer_dims": [
-            4096,
-            4096
+            1024,
+            1024
         ],
         "gaussian": {
             "enabled": false,
