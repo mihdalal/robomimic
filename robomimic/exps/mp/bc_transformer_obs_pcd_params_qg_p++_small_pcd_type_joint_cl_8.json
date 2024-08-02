@@ -51,20 +51,19 @@
         "hdf5_load_next_obs": false,
         "hdf5_normalize_obs": false,
         "hdf5_filter_key": "train",
-        "hdf5_validation_filter_key": null,
-        "seq_length": 14,
+        "hdf5_validation_filter_key": "valid",
+        "seq_length": 1,
         "pad_seq_length": true,
-        "frame_stack": 1,
-        "pad_frame_stack": false,
+        "frame_stack": 4,
+        "pad_frame_stack": true,
         "dataset_keys": [
             "actions"
         ],
         "goal_mode": null,
         "cuda": true,
-        "batch_size": 128,
+        "batch_size": 16,
         "num_epochs": 10000000,
-        "seed": 1,
-        "pad_same": false
+        "seed": 1
     },
     "algo": {
         "optim_params": {
@@ -72,11 +71,12 @@
                 "optimizer_type": "adamw",
                 "learning_rate": {
                     "initial": 0.0001,
-                    "decay_factor": 0.01,
-                    "epoch_schedule": []
+                    "decay_factor": 0.1,
+                    "epoch_schedule": [100],
+                    "scheduler_type": "linear"
                 },
                 "regularization": {
-                    "L2": 0.0
+                    "L2": 0.01
                 }
             }
         },
@@ -149,7 +149,7 @@
         },
         "transformer": {
             "enabled": true,
-            "context_length": 16,
+            "context_length": 4,
             "embed_dim": 512,
             "num_layers": 6,
             "num_heads": 8,
@@ -158,9 +158,8 @@
             "block_output_dropout": 0.1,
             "sinusoidal_embedding": false,
             "activation": "gelu",
-            "supervise_all_steps": true,
-            "nn_parameter_for_timesteps": true,
-            "act_enabled": true
+            "supervise_all_steps": false,
+            "nn_parameter_for_timesteps": true
         }
     },
     "observation": {
@@ -182,21 +181,8 @@
         },
         "encoder": {
             "low_dim": {
-                "core_class": "LowDimCore",
-                "core_kwargs": {
-                    "backbone_class": "MLP",
-                    "backbone_kwargs": {
-                        "input_dim": 7,
-                        "output_dim": 512,
-                        "layer_dims": [
-                            32,
-                            64,
-                            128, 
-                            256
-                        ],
-                        "activation": "nn.ReLU"
-                    }
-                },
+                "core_class": null,
+                "core_kwargs": {},
                 "obs_randomizer_class": null,
                 "obs_randomizer_kwargs": {}
             },
@@ -230,8 +216,7 @@
                 "core_kwargs": {
                     "backbone_class": "PointNetEncoder",
                     "backbone_kwargs": {
-                        "encoder_size":"small",
-                        "output_dim": 512
+                        "encoder_size":"small"
                     }
                 },
                 "obs_randomizer_class": null,
