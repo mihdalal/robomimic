@@ -54,7 +54,7 @@
         "hdf5_validation_filter_key": "valid",
         "seq_length": 1,
         "pad_seq_length": true,
-        "frame_stack": 8,
+        "frame_stack": 16,
         "pad_frame_stack": true,
         "dataset_keys": [
             "actions"
@@ -149,7 +149,7 @@
         },
         "transformer": {
             "enabled": true,
-            "context_length": 8,
+            "context_length": 16,
             "embed_dim": 512,
             "num_layers": 6,
             "num_heads": 8,
