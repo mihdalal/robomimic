@@ -2,7 +2,7 @@
     "algo_name": "bc",
     "experiment": {
         "name": "bc_mpinets",
-        "validate": true,
+        "validate": false,
         "logging": {
             "terminal_output_to_txt": false,
             "log_tb": true,
@@ -12,7 +12,7 @@
         "save": {
             "enabled": true,
             "every_n_seconds": null,
-            "every_n_epochs": 50,
+            "every_n_epochs": 250,
             "epochs": [],
             "on_best_validation": false,
             "on_best_rollout_return": false,
@@ -27,10 +27,10 @@
         "keep_all_videos": true,
         "video_skip": 1,
         "rollout": {
-            "enabled": true,
+            "enabled": false,
             "n": 50,
             "horizon": 150,
-            "rate": 50,
+            "rate": 250,
             "warmstart": 0,
             "terminate_on_success": true
         },
@@ -38,9 +38,10 @@
             "num_robot_points": 2048,
             "num_obstacle_points": 4096,
             "target_pcd_type": "ee",
-            "noise_scale": 15e-3,
+            "noise_scale": 0.015,
             "normalize_joint_angles": true
-        }
+        },
+        "num_envs": 20
     },
     "train": {
         "data": "/home/mdalal/research/neural_mp/neural_mp/datasets/robomimic_table_simple_1600_224_smoothed.hdf5",
@@ -51,7 +52,7 @@
         "hdf5_load_next_obs": false,
         "hdf5_normalize_obs": false,
         "hdf5_filter_key": "train",
-        "hdf5_validation_filter_key": "valid",
+        "hdf5_validation_filter_key": null,
         "seq_length": 1,
         "pad_seq_length": true,
         "frame_stack": 1,
@@ -61,8 +62,8 @@
         ],
         "goal_mode": null,
         "cuda": true,
-        "batch_size": 16,
-        "num_epochs": 10000,
+        "batch_size": 80,
+        "num_epochs": 1000000,
         "seed": 1
     },
     "algo": {
@@ -73,7 +74,7 @@
             "policy": {
                 "optimizer_type": "adam",
                 "learning_rate": {
-                    "initial": 0.0001,
+                    "initial": 0.0004,
                     "decay_factor": 0.0,
                     "epoch_schedule": [],
                     "scheduler_type": "multistep"
@@ -87,7 +88,7 @@
             "l2_weight": 0.0,
             "l1_weight": 0.0,
             "cos_weight": 0.0,
-            "collision_weight": 5.0,
+            "collision_weight": 0.0,
             "point_match_weight": 1.0
         },
         "actor_layer_dims": [
@@ -175,7 +176,7 @@
     "observation": {
         "modalities": {
             "obs": {
-                "low_dim": ["current_angles"],
+                "low_dim": ["current_angles", "goal_angles"],
                 "rgb": [],
                 "depth": [],
                 "scan": [],
@@ -240,7 +241,8 @@
                 "core_kwargs": {
                     "backbone_class": "PointNetEncoder",
                     "backbone_kwargs": {
-                        "encoder_size":"large"
+                        "encoder_size": "large",
+                        "output_dim": 2048
                     }
                 },
                 "obs_randomizer_class": null,
