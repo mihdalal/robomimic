@@ -32,7 +32,6 @@ from collections import OrderedDict
 from robomimic.scripts.split_train_val import split_train_val_from_hdf5
 import torch
 from torch.utils.data import DataLoader
-from diffusion_policy.workspace.train_diffusion_unet_lowdim_workspace import setup
 
 import robomimic
 from robomimic.models.base_nets import DDPModelWrapper
@@ -51,6 +50,13 @@ from stable_baselines3.common.vec_env import SubprocVecEnv, DummyVecEnv
 import h5py
 from torch.utils.data import Sampler
 
+def setup(rank, world_size):
+    os.environ['MASTER_ADDR'] = 'localhost'
+    os.environ['MASTER_PORT'] = '12355'
+
+    # initialize the process group
+    dist.init_process_group(rank=rank, world_size=world_size)
+    
 class SubprocVecEnvWrapper(SubprocVecEnv):
     def env_method_pass_idx(self, method_name: str, *method_args, indices = None, **method_kwargs):
         """Call instance methods of vectorized environments."""
@@ -286,11 +292,7 @@ def train(config, device, ckpt_path=None, ckpt_dict=None, output_dir=None, start
         num_enc_params = sum(p.numel() for p in model.nets['policy'].module.model.nets['encoder'].parameters())
     else:
         num_policy_params =sum(p.numel() for p in model.nets['policy'].parameters())
-        try:
-            num_enc_params = sum(p.numel() for p in model.nets['policy'].model.nets['encoder'].parameters())
-        except:
-            # this is for diffusion policy
-            num_enc_params = sum(p.numel() for p in model.nets['policy'].model['obs_encoder'].nets['obs'].parameters())
+        num_enc_params = sum(p.numel() for p in model.nets['policy'].model.nets['encoder'].parameters())
     print("Policy params: ", format_parameters(num_policy_params))
     print("encoder params: ", format_parameters(num_enc_params))
 
