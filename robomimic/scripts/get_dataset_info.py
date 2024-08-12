@@ -108,7 +108,7 @@ if __name__ == "__main__":
         print("")
     env_meta = json.loads(f["data"].attrs["env_args"])
     print("==== Env Meta ====")
-    # print(json.dumps(env_meta, indent=4))
+    print(json.dumps(env_meta, indent=4))
     print("")
 
     print("==== Dataset Structure ====")
