@@ -50,8 +50,6 @@ def algo_config_to_class(algo_config):
     # support legacy configs that do not have "transformer" item
     transformer_enabled = ("transformer" in algo_config) and algo_config.transformer.enabled
     
-    act_enabled = algo_config.transformer.act_enabled 
-
     if gaussian_enabled:
         if rnn_enabled:
             raise NotImplementedError
@@ -62,8 +60,6 @@ def algo_config_to_class(algo_config):
     elif gmm_enabled:
         if rnn_enabled:
             algo_class, algo_kwargs = BC_RNN_GMM, {}
-        elif act_enabled:
-            algo_class, algo_kwargs = BC_ACT_GMM, {}
         elif transformer_enabled:
             algo_class, algo_kwargs = BC_Transformer_GMM, {}
         else:
@@ -78,8 +74,6 @@ def algo_config_to_class(algo_config):
     else:
         if rnn_enabled:
             algo_class, algo_kwargs = BC_RNN, {}
-        elif act_enabled:
-            algo_class, algo_kwargs = BC_ACT, {}
         elif transformer_enabled:
             algo_class, algo_kwargs = BC_Transformer, {}
         else:
