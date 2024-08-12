@@ -139,7 +139,6 @@ def train(config, device, ckpt_path=None, ckpt_dict=None, output_dir=None, start
     """
     Train a model using the algorithm.
     """
-    os.environ['WANDB_API_KEY'] = "010fcba9b0530d8e86f54a8e7e68725a06be7dba"
     # first set seeds
     np.random.seed(config.train.seed)
     torch.manual_seed(config.train.seed)
@@ -415,60 +414,6 @@ def train(config, device, ckpt_path=None, ckpt_dict=None, output_dir=None, start
         # this is used for doing all-reduce on logs across ddp processes
         group = dist.new_group(list(range(world_size)))
     for epoch in range(epoch, config.train.num_epochs + 1): # epoch numbers start at 1
-        if rank == 0:
-            if config.experiment.dagger.enabled and ((epoch-1) % config.experiment.dagger.online_epoch_rate == 0):
-                # wrap model as a RolloutPolicy to prepare for rollouts
-                rollout_model = RolloutPolicy(model, obs_normalization_stats=obs_normalization_stats)
-                dagger_data_dir = os.path.join(log_dir, "dagger_data")
-                os.makedirs(dagger_data_dir, exist_ok=True)
-                dataset_path = os.path.join(dagger_data_dir, f"online_dataset_{epoch}.hdf5")
-                data_writer = h5py.File(dataset_path, "w")
-                online_epoch = epoch // config.experiment.dagger.online_epoch_rate
-                total_dagger_samples = TrainUtils.collect_online_dataset(
-                    policy=rollout_model,
-                    envs=envs,
-                    horizon=config.experiment.rollout.horizon,
-                    use_goals=config.use_goals,
-                    num_episodes=config.experiment.dagger.num_episodes,
-                    render=False,
-                    terminate_on_success=config.experiment.rollout.terminate_on_success,
-                    online_epoch=online_epoch,
-                    resampling_strategy=config.experiment.dagger.resampling_strategy,
-                    num_steps_to_keep_before_collision=config.experiment.dagger.num_steps_to_keep_before_collision,
-                    data_writer=data_writer,
-                    dagger_traj_filter=config.experiment.dagger.dagger_traj_filter,
-                )
-                if total_dagger_samples > 0:
-                    config.unlock()
-                    config.train.data = dataset_path
-                    config.lock()
-                    split_train_val_from_hdf5(dataset_path, val_ratio=0.0)
-                    os.system(f'python robomimic/scripts/get_dataset_info.py --dataset {dataset_path}')
-                    additional_trainset, additional_validset = TrainUtils.load_data_for_training(
-                        config, obs_keys=shape_meta["all_obs_keys"])
-                    train_datasets.append(additional_trainset)
-                    train_dataset_lengths.append(len(additional_trainset))
-                    if config.experiment.dagger.data_mode == 'online_data_only':
-                        torch.utils.data.ConcatDataset(train_datasets[1:])
-                        train_sampler = BalancedConcatSampler(train_dataset_lengths[1:], batch_size=config.train.batch_size)
-                    elif config.experiment.dagger.data_mode == 'latest_data_only':
-                        trainset = torch.utils.data.ConcatDataset(train_datasets[-1])
-                        train_sampler = BalancedConcatSampler(train_dataset_lengths[-1:], batch_size=config.train.batch_size)
-                    else:
-                        trainset = torch.utils.data.ConcatDataset(train_datasets)
-                        train_sampler = BalancedConcatSampler(train_dataset_lengths, batch_size=config.train.batch_size)
-                    # clear current train_loader and create a new one
-                    del train_loader
-                    gc.collect()
-                    train_loader = DataLoader(
-                        dataset=trainset,
-                        batch_size=config.train.batch_size,
-                        shuffle=(train_sampler is None),
-                        num_workers=config.train.num_data_workers,
-                        drop_last=True,
-                        pin_memory=True,
-                        persistent_workers=True if config.train.num_data_workers > 0 else False,
-                    )
         step_log = TrainUtils.run_epoch(
             model=model,
             data_loader=train_loader,

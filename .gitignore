@@ -124,4 +124,3 @@ venv.bak/
 # private macros
 macros_private.py
 robomimic/logs
-robomimic/exps/mp/matrix

@@ -19,8 +19,15 @@ import robomimic.utils.torch_utils as TorchUtils
 from robomimic.config import config_factory
 from robomimic.algo import algo_factory
 from robomimic.algo import RolloutPolicy
-from diffusion_policy.workspace.train_diffusion_unet_lowdim_workspace import setup
 import torch.nn as nn
+import torch.distributed as dist
+
+def setup(rank, world_size):
+    os.environ['MASTER_ADDR'] = 'localhost'
+    os.environ['MASTER_PORT'] = '12355'
+
+    # initialize the process group
+    dist.init_process_group(rank=rank, world_size=world_size)
 
 def create_hdf5_filter_key(hdf5_path, demo_keys, key_name):
     """

@@ -224,7 +224,6 @@ def run_trained_agent(args):
         config, _ = FileUtils.config_from_checkpoint(ckpt_dict=ckpt_dict)
         rollout_horizon = config.experiment.rollout.horizon
 
-    ckpt_dict['env_metadata']['env_kwargs']['cfg']['task']['include_mpi_nets_info_in_logs'] = True
     # create environment from saved checkpoint
     env, _ = FileUtils.env_from_checkpoint(
         ckpt_dict=ckpt_dict, 

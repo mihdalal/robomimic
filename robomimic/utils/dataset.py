@@ -555,7 +555,6 @@ class SequenceDataset(torch.utils.data.Dataset):
         if self.get_pad_mask:
             obs["pad_mask"] = pad_mask
             
-        # TODO: make this less hardcoded
         if 'current_angles' in obs:
             # compute noise to add to the current angles and the compute_pcd_params (if present)
             noise = np.random.normal(0, self.pcd_params['noise_scale'], obs['current_angles'].shape)
@@ -589,10 +588,8 @@ class SequenceDataset(torch.utils.data.Dataset):
             )
             obs_0 = {k.split('/')[1]: obs_0[k] for k in obs_0}  # strip the prefix
             obs['compute_pcd_params'] = np.concatenate([obs['current_angles'], obs['goal_angles'], obs_0['compute_pcd_params'].repeat(obs['current_angles'].shape[0], 0)], axis=1)
-        compute_pcd_params_saved = None
         for k in obs:
             if 'pcd' in k:
-                compute_pcd_params_saved = obs[k]
                 obs[k] = compute_full_pcd(
                     pcd_params=obs[k],
                     **self.pcd_params
@@ -606,9 +603,6 @@ class SequenceDataset(torch.utils.data.Dataset):
             if 'angles' in k and self.pcd_params['normalize_joint_angles']:
                 obs[k] = normalize_franka_joints(obs[k])
         
-        #TODO: this breaks when you have multiple datasets with different sized PCD params, fix!
-        # if compute_pcd_params_saved is not None:
-        #     obs['saved_params'] = compute_pcd_params_saved
         return obs
 
     def get_dataset_sequence_from_demo(self, demo_id, index_in_demo, keys, num_frames_to_stack=0, seq_length=1):

@@ -244,9 +244,8 @@ def playback_dataset(args):
         )
         ObsUtils.initialize_obs_utils_with_obs_specs(obs_modality_specs=dummy_spec)
         env_meta = FileUtils.get_env_metadata_from_dataset(dataset_path=args.dataset)
-        # env_meta['env_kwargs']['cfg']['task']['include_mpi_nets_info_in_logs'] = True if args.use_actions else False
         env_meta['env_kwargs']['cfg']['task']['setup_cameras'] = True if args.use_actions else False
-        pcd_params = dict(num_robot_points=128, num_obstacle_points=4096)
+        pcd_params = dict(num_robot_points=2048, num_obstacle_points=4096)
         env = EnvUtils.create_env_from_metadata(env_meta=env_meta, render=args.render, render_offscreen=write_video, pcd_params=pcd_params)
 
         # some operations for playback are robosuite-specific, so determine if this environment is a robosuite env
