@@ -8,6 +8,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.distributions as D
 from neural_mp.envs.franka_pybullet_env import decompose_scene_pcd_params_obs_batched
+from neural_mp.utils.franka_utils import normalize_franka_joints
 from neural_mp.utils import franka_utils
 from neural_mp.utils.constants import FRANKA_LOWER_LIMITS, FRANKA_UPPER_LIMITS
 
@@ -52,8 +53,8 @@ def algo_config_to_class(algo_config):
     
     mpinets_enabled = algo_config.mpinets.enabled if "mpinets" in algo_config else False
     
-    act_enabled = algo_config.transformer.act_enabled if "transformer" in algo_config else False
-    
+    act_enabled = algo_config.transformer.act_enabled 
+
     if mpinets_enabled:
         if rnn_enabled:
             algo_class = BC_RNN_MpiNet
@@ -88,7 +89,6 @@ def algo_config_to_class(algo_config):
         if rnn_enabled:
             algo_class, algo_kwargs = BC_RNN, {}
         elif act_enabled:
-            
             algo_class, algo_kwargs = BC_ACT, {}
         elif transformer_enabled:
             algo_class, algo_kwargs = BC_Transformer, {}
@@ -269,7 +269,7 @@ class BC(PolicyAlgo):
         Returns:
             action (torch.Tensor): action tensor
         """
-        assert not self.nets.training
+        # assert not self.nets.training
         return self.nets["policy"]('forward', obs_dict, goal_dict=goal_dict)
 
 class BC_MpiNet(BC):
@@ -279,13 +279,15 @@ class BC_MpiNet(BC):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.loss_fun = loss.CollisionAndBCLossContainer()
+        # self.loss_fun = loss.CollisionAndBCLossContainer()
+        self.loss_fun = loss.BCLossContainer()
     
     def _create_networks(self):
         """
         Creates networks and places them into @self.nets.
         """
         self.nets = nn.ModuleDict()
+        del self.obs_shapes['goal_angles']
         self.nets["policy"] = PolicyNets.ActorNetwork(
             obs_shapes=self.obs_shapes,
             goal_shapes=self.goal_shapes,
@@ -295,7 +297,25 @@ class BC_MpiNet(BC):
             encoder_kwargs=ObsUtils.obs_encoder_kwargs_from_config(self.obs_config.encoder),
         )
         self.nets = self.nets.float().to(self.device)
-        
+    
+    def _forward_training(self, batch):
+        """
+        Internal helper function for BC algo class. Compute forward pass
+        and return network outputs in @predictions dict.
+
+        Args:
+            batch (dict): dictionary with torch.Tensors sampled
+                from a data loader and filtered by @process_batch_for_training
+
+        Returns:
+            predictions (dict): dictionary containing network outputs
+        """
+        predictions = OrderedDict()
+        del batch["obs"]['goal_angles']
+        actions = self.nets["policy"]('forward', obs_dict=batch["obs"], goal_dict=batch["goal_obs"])
+        predictions["actions"] = actions
+        return predictions
+    
     def _compute_losses(self, predictions, batch):
         """
         Internal helper function for BC algo class. Compute losses based on
@@ -309,35 +329,40 @@ class BC_MpiNet(BC):
         Returns:
             losses (dict): dictionary of losses computed over the batch
         """
-        curr_angles = batch['obs']['current_angles'] # this is normalized
+        curr_angles = normalize_franka_joints(batch['obs']['current_angles']) # this is normalized
         y_hat = torch.clamp(curr_angles + predictions['actions'], min=-1, max=1) # note this means we need to unnormalize the predictions in the env
-        scene_pcd_params = batch["obs"]["saved_params"][:, 14:]
-        cuboid_dims, cuboid_centers, cuboid_quats, cylinder_radii, cylinder_heights, cylinder_centers, cylinder_quats, sphere_centers, sphere_radii, M = decompose_scene_pcd_params_obs_batched(scene_pcd_params)
-        if cylinder_centers.shape[1] == 0:
-            cylinder_centers = torch.zeros_like(cuboid_centers)
-            cylinder_radii = torch.zeros_like(cuboid_dims[..., 0:1])
-            cylinder_heights = torch.zeros_like(cuboid_dims[..., 0:1])
-            cylinder_quats = torch.zeros_like(cuboid_quats)
-        if sphere_centers.shape[1] == 0:
-            sphere_centers = torch.zeros_like(cuboid_centers)
-            sphere_radii = torch.zeros_like(cuboid_dims[..., 0:1])
-        collision_loss, point_match_loss = self.loss_fun(
+        # saved_params = batch["obs"]["saved_params"]
+        # scene_pcd_params = batch["obs"]["saved_params"][:, 14:]
+        # cuboid_dims, cuboid_centers, cuboid_quats, cylinder_radii, cylinder_heights, cylinder_centers, cylinder_quats, sphere_centers, sphere_radii, M = decompose_scene_pcd_params_obs_batched(scene_pcd_params)
+        # if cylinder_centers.shape[1] == 0:
+        #     cylinder_centers = torch.zeros_like(cuboid_centers)
+        #     cylinder_radii = torch.zeros_like(cuboid_dims[..., 0:1])
+        #     cylinder_heights = torch.zeros_like(cuboid_dims[..., 0:1])
+        #     cylinder_quats = torch.zeros_like(cuboid_quats)
+        # if sphere_centers.shape[1] == 0:
+        #     sphere_centers = torch.zeros_like(cuboid_centers)
+        #     sphere_radii = torch.zeros_like(cuboid_dims[..., 0:1])
+        # collision_loss, point_match_loss = self.loss_fun(
+        #     y_hat,
+        #     cuboid_centers.reshape(-1, M, 3),
+        #     cuboid_dims.reshape(-1, M, 3),
+        #     cuboid_quats.reshape(-1, M, 4),
+        #     cylinder_centers.reshape(-1, M, 3),
+        #     cylinder_radii.reshape(-1, M, 1),
+        #     cylinder_heights.reshape(-1, M, 1),
+        #     cylinder_quats.reshape(-1, M, 4),
+        #     sphere_centers.reshape(-1, M, 3),
+        #     sphere_radii.reshape(-1, M, 1),
+        #     batch['actions'], # assume we are training with absolute actions
+        # )
+        absolute_action = normalize_franka_joints(batch['actions'] + batch['obs']['current_angles'])
+        point_match_loss = self.loss_fun(
             y_hat,
-            cuboid_centers.reshape(-1, M, 3),
-            cuboid_dims.reshape(-1, M, 3),
-            cuboid_quats.reshape(-1, M, 4),
-            cylinder_centers.reshape(-1, M, 3),
-            cylinder_radii.reshape(-1, M, 1),
-            cylinder_heights.reshape(-1, M, 1),
-            cylinder_quats.reshape(-1, M, 4),
-            sphere_centers.reshape(-1, M, 3),
-            sphere_radii.reshape(-1, M, 1),
-            batch['actions'], # assume we are training with absolute actions
+            absolute_action
         )
+        collision_loss = 0.0 * point_match_loss
         losses = OrderedDict()
         a_target = batch["actions"]
-        # convert a_target into delta action
-        a_target = a_target - curr_angles
         actions = predictions["actions"]
         losses["l2_loss"] = nn.MSELoss()(actions, a_target)
         losses["l1_loss"] = nn.SmoothL1Loss()(actions, a_target)
@@ -818,7 +843,7 @@ class BC_RNN(BC):
         Returns:
             action (torch.Tensor): action tensor
         """
-        assert not self.nets.training
+        # assert not self.nets.training
 
         if self._rnn_hidden_state is None or self._rnn_counter % self._rnn_horizon == 0:
             batch_size = list(obs_dict.values())[0].shape[0]
@@ -978,7 +1003,7 @@ class BC_RNN_MpiNet(BC_MpiNet):
         Returns:
             action (torch.Tensor): action tensor
         """
-        assert not self.nets.training
+        # assert not self.nets.training
 
         if self._rnn_hidden_state is None or self._rnn_counter % self._rnn_horizon == 0:
             batch_size = list(obs_dict.values())[0].shape[0]
@@ -1264,7 +1289,7 @@ class BC_Transformer(BC):
         Returns:
             action (torch.Tensor): action tensor
         """
-        assert not self.nets.training
+        # assert not self.nets.training
 
         return self.nets["policy"]('forward', obs_dict, actions=None, goal_dict=goal_dict)[:, -1, :]
 
@@ -1391,7 +1416,7 @@ class BC_ACT(BC):
         Returns:
             action (torch.Tensor): action tensor
         """
-        assert not self.nets.training   
+        # assert not self.nets.training   
         if len(self.inference_action_cache) == 0:
             # need to iteratively predict the actions
             bs = obs_dict['current_angles'].shape[0]
@@ -1532,7 +1557,7 @@ class BC_ACT_GMM(BC_ACT):
         Returns:
             action (torch.Tensor): action tensor
         """
-        assert not self.nets.training
+        # assert not self.nets.training
         actions = torch.zeros((obs_dict['current_angles'].shape[0], self.global_config.train.seq_length, self.ac_dim), device=self.device)
         # add time dimension to obs_dict
         obs_dict = {k: obs_dict[k].unsqueeze(1) for k in obs_dict}
