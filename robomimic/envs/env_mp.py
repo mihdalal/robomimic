@@ -26,16 +26,13 @@ import numpy as np
 
 # Data structures and functions for rendering
 from pytorch3d.structures import Pointclouds
-from pytorch3d.vis.plotly_vis import AxisArgs, plot_batch_individually, plot_scene
 from pytorch3d.renderer import (
      look_at_view_transform,
      FoVOrthographicCameras, 
      PointsRasterizationSettings,
      PointsRenderer,
-     PulsarPointsRenderer,
      PointsRasterizer,
      AlphaCompositor,
-     NormWeightedCompositor
  )
 
 from neural_mp.envs.franka_pybullet_env import depth_to_rgb, compute_full_pcd
@@ -51,7 +48,6 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
         use_image_obs=False, 
         postprocess_visual_obs=True, 
         pcd_params=None,
-        mpinets_enabled=False,
         dataset_path=None,
         **kwargs,
     ):
@@ -69,8 +65,6 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
             postprocess_visual_obs (bool): ignored - gym envs don't typically use images
             
             pcd_params (dict): parameters for point cloud processing
-            
-            mpinets_enabled (bool): whether to use mpinets style unprocessing of delta actions
             
             dataset_path (str): path to dataset
             
@@ -93,7 +87,6 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
         self._done = None
         self.pcd_params = pcd_params if pcd_params is not None else dict()
         self.postprocesss_visual_obs = postprocess_visual_obs
-        self.mpinets_enabled = mpinets_enabled
         self.env = eval(env_name)(cfg)
         # build observation space from the observation dictionary
         obs = self.get_observation()
@@ -154,7 +147,7 @@ class EnvMP(EB.EnvBase, gymnasium.Env):
             done (bool): whether the task is done
             info (dict): extra information
         """
-        obs, reward, done, info = self.env.step(action.copy(), unnormalize_delta_actions=self.mpinets_enabled)
+        obs, reward, done, info = self.env.step(action.copy())
         self._current_obs = obs
         self._current_reward = reward
         self._current_done = done
@@ -620,48 +613,3 @@ def render_pointcloud(pcd):
     images = renderer(point_cloud)
     img = images[0, ..., :3].cpu().numpy()
     return img
-
-def render_single_pointcloud(pcd):
-    device = torch.device("cuda:0")
-    torch.cuda.set_device(device)
-    verts = torch.Tensor(pcd[:, :3]).to(device)
-
-    rgb_pcd = torch.ones_like(verts) * torch.tensor([255, 0, 0]).to(device)
-    rgb = torch.Tensor(rgb_pcd).to(device)
-
-    point_cloud = Pointclouds(points=[verts], features=[rgb])
-
-    # Initialize a camera.
-    R, T = look_at_view_transform(1, 0, 90, up=((1, 0, 0),))
-    cameras = FoVOrthographicCameras(device=device, R=R, T=T, znear=0.01)
-
-    # Define the settings for rasterization and shading. Here we set the output image to be of size
-    # 512x512. As we are rendering images for visualization purposes only we will set faces_per_pixel=1
-    # and blur_radius=0.0. Refer to raster_points.py for explanations of these parameters. 
-    raster_settings = PointsRasterizationSettings(
-        image_size=512, 
-        # radius = 0.003,
-        points_per_pixel = 10
-    )
-
-
-    # Create a points renderer by compositing points using an alpha compositor (nearer points
-    # are weighted more heavily). See [1] for an explanation.
-    rasterizer = PointsRasterizer(cameras=cameras, raster_settings=raster_settings)
-    renderer = PointsRenderer(
-        rasterizer=rasterizer,
-        compositor=AlphaCompositor()
-    )
-
-    images = renderer(point_cloud)
-    img = images[0, ..., :3].cpu().numpy()
-    return img
-
-if __name__ == "__main__":
-    from hydra import compose, initialize
-    from omegaconf import OmegaConf
-
-    initialize(config_path="../../../neural_mp/neural_mp/configs", job_name="")
-    cfg = compose(config_name="config")
-    print(OmegaConf.to_yaml(cfg))
-    EnvMP(env_name=cfg.task.env_name, cfg=cfg)

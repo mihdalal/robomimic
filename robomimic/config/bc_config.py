@@ -105,30 +105,8 @@ class BCConfig(BaseConfig):
         self.algo.transformer.activation = "gelu"                   # activation function for MLP in Transformer Block
         self.algo.transformer.supervise_all_steps = False           # if true, supervise all intermediate actions, otherwise only final one
         self.algo.transformer.nn_parameter_for_timesteps = True     # if true, use nn.Parameter otherwise use nn.Embedding
-        self.algo.transformer.act_enabled = False
 
         # mp settings
         self.experiment.rollout.evaluate_on_dataset = False
         self.experiment.rollout.evaluate_on_dataset_filter_key = 'valid'
-        
-        #mpinets settings
-        self.algo.mpinets.enabled = False
-        self.algo.loss.collision_weight = 0.0
-        self.algo.loss.point_match_weight = 0.0
-        self.algo.loss.exponential_precision_weight = 0.0
-        self.algo.loss.collision_loss_params.margin = 0.03
-        self.algo.loss.collision_loss_params.hinge_loss = True
-        self.algo.loss.collision_loss_params.reduction = "mean"
-        self.algo.loss.collision_loss_params.smooth_sdf_loss = "none"
-        self.algo.loss.collision_loss_params.compute_loss_on_penetrations_only = False
-        
-        self.experiment.dagger.enabled = False
-        self.experiment.dagger.online_epoch_rate = 50 # how often to run dagger
-        self.experiment.dagger.num_episodes = 10 # this is per env so 10*num_envs overall
-        self.experiment.dagger.resampling_strategy = "all" # all, collision, or random
-        self.experiment.dagger.num_steps_to_keep_before_collision = 10 # how many steps to keep before collision
-        self.experiment.dagger.data_mode = 'all' # all, latest_data_only, or online_data_only - decides on-policy'ness of dagger
-        self.experiment.dagger.dagger_traj_filter = 'all' # all, collide, fail, collide or fail - which trajectories to relabel
-        self.experiment.dagger.num_trajs_to_relabel=1 # for backwards compatibility only, not used
-        
         
