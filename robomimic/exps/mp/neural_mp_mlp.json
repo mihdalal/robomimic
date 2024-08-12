@@ -1,8 +1,8 @@
 {
     "algo_name": "bc",
     "experiment": {
-        "name": "bc_rnn_mp_pcd_only",
-        "validate": true,
+        "name": "neural_mp_rnn",
+        "validate": false,
         "logging": {
             "terminal_output_to_txt": false,
             "log_tb": true,
@@ -12,7 +12,7 @@
         "save": {
             "enabled": true,
             "every_n_seconds": null,
-            "every_n_epochs": 50,
+            "every_n_epochs": 250,
             "epochs": [],
             "on_best_validation": false,
             "on_best_rollout_return": false,
@@ -28,17 +28,19 @@
         "video_skip": 1,
         "rollout": {
             "enabled": true,
-            "n": 50,
+            "n": 25,
             "horizon": 150,
-            "rate": 50,
+            "rate": 250,
             "warmstart": 0,
             "terminate_on_success": true
         },
         "pcd_params": {
             "num_robot_points": 2048,
             "num_obstacle_points": 4096,
-            "target_pcd_type": "ee"
-        }
+            "target_pcd_type": "joint",
+            "noise_scale": 0.0
+        },
+        "num_envs": 20
     },
     "train": {
         "data": "/home/mdalal/research/neural_mp/neural_mp/datasets/robomimic_table_simple_1600_224_smoothed.hdf5",
@@ -49,8 +51,8 @@
         "hdf5_load_next_obs": false,
         "hdf5_normalize_obs": false,
         "hdf5_filter_key": "train",
-        "hdf5_validation_filter_key": "valid",
-        "seq_length": 2,
+        "hdf5_validation_filter_key": null,
+        "seq_length": 1,
         "pad_seq_length": true,
         "frame_stack": 1,
         "pad_frame_stack": true,
@@ -83,7 +85,10 @@
             "l1_weight": 0.0,
             "cos_weight": 0.0
         },
-        "actor_layer_dims": [],
+        "actor_layer_dims": [
+            1024,
+            1024
+        ],
         "gaussian": {
             "enabled": false,
             "fixed_std": false,
@@ -135,9 +140,9 @@
             ]
         },
         "rnn": {
-            "enabled": true,
-            "horizon": 2,
-            "hidden_dim": 1024,
+            "enabled": false,
+            "horizon": 10,
+            "hidden_dim": 400,
             "rnn_type": "LSTM",
             "num_layers": 2,
             "open_loop": false,
@@ -179,27 +184,8 @@
         },
         "encoder": {
             "low_dim": {
-                "core_class": "LowDimCore",
-                "core_kwargs": {
-                    "backbone_class": "MLP",
-                    "backbone_kwargs": {
-                        "input_dim": 7,
-                        "output_dim": 64,
-                        "layer_dims": [
-                            32,
-                            64,
-                            128, 
-                            128, 
-                            64
-                        ],
-                        "layer_func": "nn.Linear",
-                        "layer_func_kwargs": null,
-                        "activation": "nn.LeakyReLU",
-                        "dropouts": null,
-                        "normalization": false,
-                        "output_activation": null
-                    }
-                },
+                "core_class": null,
+                "core_kwargs": {},
                 "obs_randomizer_class": null,
                 "obs_randomizer_kwargs": {}
             },
