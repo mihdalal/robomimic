@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.distributions as D
-from neural_mp.envs.franka_pybullet_env import decompose_scene_pcd_params_obs_batched
+from neural_mp.utils.pcd_utils import decompose_scene_pcd_params_obs_batched
 from neural_mp.utils import franka_utils
 from neural_mp.utils.constants import FRANKA_LOWER_LIMITS, FRANKA_UPPER_LIMITS
 
