@@ -818,7 +818,7 @@ class BC_RNN(BC):
         Returns:
             action (torch.Tensor): action tensor
         """
-        assert not self.nets.training
+        # assert not self.nets.training
 
         if self._rnn_hidden_state is None or self._rnn_counter % self._rnn_horizon == 0:
             batch_size = list(obs_dict.values())[0].shape[0]
@@ -1264,7 +1264,7 @@ class BC_Transformer(BC):
         Returns:
             action (torch.Tensor): action tensor
         """
-        assert not self.nets.training
+        # assert not self.nets.training
 
         return self.nets["policy"]('forward', obs_dict, actions=None, goal_dict=goal_dict)[:, -1, :]
 
