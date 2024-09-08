@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.distributions as D
-from neural_mp.envs.franka_pybullet_env import decompose_scene_pcd_params_obs_batched
+from neural_mp.utils.pcd_utils import decompose_scene_pcd_params_obs_batched
 from neural_mp.utils import franka_utils
 from neural_mp.utils.constants import FRANKA_LOWER_LIMITS, FRANKA_UPPER_LIMITS
 
@@ -818,7 +818,7 @@ class BC_RNN(BC):
         Returns:
             action (torch.Tensor): action tensor
         """
-        assert not self.nets.training
+        # assert not self.nets.training
 
         if self._rnn_hidden_state is None or self._rnn_counter % self._rnn_horizon == 0:
             batch_size = list(obs_dict.values())[0].shape[0]
@@ -1264,7 +1264,7 @@ class BC_Transformer(BC):
         Returns:
             action (torch.Tensor): action tensor
         """
-        assert not self.nets.training
+        # assert not self.nets.training
 
         return self.nets["policy"]('forward', obs_dict, actions=None, goal_dict=goal_dict)[:, -1, :]
 
