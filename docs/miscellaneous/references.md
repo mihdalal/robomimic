@@ -1,6 +1,6 @@
-# Projects using robomimic
+# Projects using sp_robomimic
 
-A list of projects and papers that use **robomimic**. If you would like to add your work to this list, please send the paper or project information to Ajay Mandlekar (<amandlek@cs.stanford.edu>).
+A list of projects and papers that use **sp_robomimic**. If you would like to add your work to this list, please send the paper or project information to Ajay Mandlekar (<amandlek@cs.stanford.edu>).
 
 ## 2023
 

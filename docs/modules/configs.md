@@ -3,7 +3,7 @@
 Configs are instances of the `Config` class defined in `config/config.py`. The implementation is largely based on [addict](https://github.com/mewwts/addict), which makes working with nested dictionaries convenient. At their core, configs are essentially nested dictionaries (similar to loaded json objects), with an easy way to access and set nested keys by using attributes. See the example below:
 
 ```python
-from robomimic.config import Config
+from sp_robomimic.config import Config
 
 # normal way to create nested dictionaries and read values
 c = dict()
@@ -40,11 +40,11 @@ All algorithm config classes (one class per algorithm type) are subclasses of th
 ```python
 import os
 import json
-import robomimic
-from robomimic.config import get_all_registered_configs
+import sp_robomimic
+from sp_robomimic.config import get_all_registered_configs
 
 # store template config jsons in this directory
-target_dir = os.path.join(robomimic.__path__[0], "exps/templates/")
+target_dir = os.path.join(sp_robomimic.__path__[0], "exps/templates/")
 
 # iterate through registered algorithm config classes
 all_configs = get_all_registered_configs()
@@ -64,7 +64,7 @@ The `BaseConfig` class has a property and classmethod called `ALGO_NAME` that mu
 
 ```python
 import json
-from robomimic.config import config_factory
+from sp_robomimic.config import config_factory
 
 # base config for algorithm with default values
 config = config_factory("bc")
@@ -78,7 +78,7 @@ config.update(ext_config_json)
 At test-time, when loading a model from a checkpoint, the config is restored by reading the json string from the checkpoint, and then using it to instantiate the config. An example is below (modified slightlyt from `config_from_checkpoint` in `utils/file_utils.py`)
 
 ```python
-import robomimic.utils.file_utils as FileUtils
+import sp_robomimic.utils.file_utils as FileUtils
 ckpt_dict = FileUtils.load_dict_from_checkpoint("path/to/ckpt.pth")
 config_json = ckpt_dict["config"]
 config = config_factory(ckpt_dict["algo_name"], dic=json.loads(config_json))

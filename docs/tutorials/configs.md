@@ -1,6 +1,6 @@
 # Configuring and Launching Training Runs
 
-Robomimic uses a centralized [configuration system](../modules/configs.html) to specify (hyper)parameters at all levels. Below we walk through two ways to configure and launching training runs.
+sp_robomimic uses a centralized [configuration system](../modules/configs.html) to specify (hyper)parameters at all levels. Below we walk through two ways to configure and launching training runs.
 
 
 #### Best practices
@@ -29,10 +29,10 @@ Please see the [hyperparameter helper tutorial](../tutorials/hyperparam_scan.htm
 Another way to launch a training run is to make a default config (with a line like `config = config_factory(algo_name="bc")`), modify the config in python code, and then call the train function, like in the `examples/train_bc_rnn.py` script.
 
 ```python
-import robomimic
-import robomimic.utils.torch_utils as TorchUtils
-from robomimic.config import config_factory
-from robomimic.scripts.train import train
+import sp_robomimic
+import sp_robomimic.utils.torch_utils as TorchUtils
+from sp_robomimic.config import config_factory
+from sp_robomimic.scripts.train import train
 
 # make default BC config
 config = config_factory(algo_name="bc")

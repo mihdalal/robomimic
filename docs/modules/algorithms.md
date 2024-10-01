@@ -181,7 +181,7 @@ for step_i in range(horizon):
 
 ## Implemented Algorithms
 
-Refer [here](../introduction/implemented_algorithms.html) for the list of algorithms currently implemented in robomimic
+Refer [here](../introduction/implemented_algorithms.html) for the list of algorithms currently implemented in sp_robomimic
 
 
 

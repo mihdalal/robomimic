@@ -13,7 +13,7 @@ help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 apidoc:
-	@sphinx-apidoc -T --force ../robomimic -o api
+	@sphinx-apidoc -T --force ../sp_robomimic -o api
 
 .PHONY: help Makefile
 

@@ -11,24 +11,24 @@ lines = [x for x in lines if (('.png' not in x) and ('.gif' not in x))]
 long_description = ''.join(lines)
 
 setup(
-    name="robomimic",
+    name="sp_robomimic",
     packages=[
         package for package in find_packages() if package.startswith("robomimic")
     ],
     install_requires=[
-        "numpy>=1.13.3",
-        "h5py",
-        "psutil",
-        "tqdm",
-        "termcolor",
-        "tensorboard",
-        "tensorboardX",
-        "imageio",
-        "imageio-ffmpeg",
-        "matplotlib",
-        "egl_probe>=1.0.1",
-        "torch",
-        "torchvision",
+        # "numpy>=1.13.3",
+        # "h5py",
+        # "psutil",
+        # "tqdm",
+        # "termcolor",
+        # "tensorboard",
+        # "tensorboardX",
+        # "imageio",
+        # "imageio-ffmpeg",
+        # "matplotlib",
+        # "egl_probe>=1.0.1",
+        # "torch",
+        # "torchvision",
     ],
     eager_resources=['*'],
     include_package_data=True,

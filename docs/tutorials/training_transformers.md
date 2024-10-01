@@ -12,7 +12,7 @@ Before trying to train a transformer, it might be useful to read the following t
 
 </div>
 
-A template with tuned parameters for transformer based policy networks is defined in `robomimic/config/default_templates/bc_transformer.json`.
+A template with tuned parameters for transformer based policy networks is defined in `sp_robomimic/config/default_templates/bc_transformer.json`.
 
 #### 1. Using default configurations
 
@@ -24,7 +24,7 @@ $ python train.py --config ../config/default_templates/bc_transformer.json --dat
 
 #### 2. Defining custom parameters
 
-If you want to modify the default transformer parameters, do not directly modify the default config (`config/bc_config.py`) or template (`config/default_templates/bc_transformer.json`).  Instead, you can create a copy of `robomimic/config/default_templates/bc_transformer.json` and store it in a new directory on your computer.  Set this as the base file for `scripts/hyperparam_helper.py` and define custom settings as described [here](./hyperparam_scan.html).  This is particularly useful when running a sweep over hyperparameters; **it is the prefered way to launch multiple training runs**. 
+If you want to modify the default transformer parameters, do not directly modify the default config (`config/bc_config.py`) or template (`config/default_templates/bc_transformer.json`).  Instead, you can create a copy of `sp_robomimic/config/default_templates/bc_transformer.json` and store it in a new directory on your computer.  Set this as the base file for `scripts/hyperparam_helper.py` and define custom settings as described [here](./hyperparam_scan.html).  This is particularly useful when running a sweep over hyperparameters; **it is the prefered way to launch multiple training runs**. 
 
 Optionally, you can modify the default template in python code or directly set the appropriate keys in your copy of the config file.  This code snippet below highlights useful parameters to tune for transformers.  To see all transformer policy settings, refer to `config/bc_config.py`.
 

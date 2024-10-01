@@ -1,77 +1,77 @@
-robomimic.algo package
+sp_robomimic.algo package
 ======================
 
 Submodules
 ----------
 
-robomimic.algo.algo module
+sp_robomimic.algo.algo module
 --------------------------
 
-.. automodule:: robomimic.algo.algo
+.. automodule:: sp_robomimic.algo.algo
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.algo.bc module
+sp_robomimic.algo.bc module
 ------------------------
 
-.. automodule:: robomimic.algo.bc
+.. automodule:: sp_robomimic.algo.bc
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.algo.bcq module
+sp_robomimic.algo.bcq module
 -------------------------
 
-.. automodule:: robomimic.algo.bcq
+.. automodule:: sp_robomimic.algo.bcq
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.algo.cql module
+sp_robomimic.algo.cql module
 -------------------------
 
-.. automodule:: robomimic.algo.cql
+.. automodule:: sp_robomimic.algo.cql
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.algo.gl module
+sp_robomimic.algo.gl module
 ------------------------
 
-.. automodule:: robomimic.algo.gl
+.. automodule:: sp_robomimic.algo.gl
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.algo.hbc module
+sp_robomimic.algo.hbc module
 -------------------------
 
-.. automodule:: robomimic.algo.hbc
+.. automodule:: sp_robomimic.algo.hbc
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.algo.iql module
+sp_robomimic.algo.iql module
 -------------------------
 
-.. automodule:: robomimic.algo.iql
+.. automodule:: sp_robomimic.algo.iql
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.algo.iris module
+sp_robomimic.algo.iris module
 --------------------------
 
-.. automodule:: robomimic.algo.iris
+.. automodule:: sp_robomimic.algo.iris
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.algo.td3\_bc module
+sp_robomimic.algo.td3\_bc module
 -----------------------------
 
-.. automodule:: robomimic.algo.td3_bc
+.. automodule:: sp_robomimic.algo.td3_bc
    :members:
    :undoc-members:
    :show-inheritance:
@@ -79,7 +79,7 @@ robomimic.algo.td3\_bc module
 Module contents
 ---------------
 
-.. automodule:: robomimic.algo
+.. automodule:: sp_robomimic.algo
    :members:
    :undoc-members:
    :show-inheritance:

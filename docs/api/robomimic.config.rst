@@ -1,85 +1,85 @@
-robomimic.config package
+sp_robomimic.config package
 ========================
 
 Submodules
 ----------
 
-robomimic.config.base\_config module
+sp_robomimic.config.base\_config module
 ------------------------------------
 
-.. automodule:: robomimic.config.base_config
+.. automodule:: sp_robomimic.config.base_config
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.config.bc\_config module
+sp_robomimic.config.bc\_config module
 ----------------------------------
 
-.. automodule:: robomimic.config.bc_config
+.. automodule:: sp_robomimic.config.bc_config
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.config.bcq\_config module
+sp_robomimic.config.bcq\_config module
 -----------------------------------
 
-.. automodule:: robomimic.config.bcq_config
+.. automodule:: sp_robomimic.config.bcq_config
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.config.config module
+sp_robomimic.config.config module
 ------------------------------
 
-.. automodule:: robomimic.config.config
+.. automodule:: sp_robomimic.config.config
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.config.cql\_config module
+sp_robomimic.config.cql\_config module
 -----------------------------------
 
-.. automodule:: robomimic.config.cql_config
+.. automodule:: sp_robomimic.config.cql_config
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.config.gl\_config module
+sp_robomimic.config.gl\_config module
 ----------------------------------
 
-.. automodule:: robomimic.config.gl_config
+.. automodule:: sp_robomimic.config.gl_config
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.config.hbc\_config module
+sp_robomimic.config.hbc\_config module
 -----------------------------------
 
-.. automodule:: robomimic.config.hbc_config
+.. automodule:: sp_robomimic.config.hbc_config
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.config.iql\_config module
+sp_robomimic.config.iql\_config module
 -----------------------------------
 
-.. automodule:: robomimic.config.iql_config
+.. automodule:: sp_robomimic.config.iql_config
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.config.iris\_config module
+sp_robomimic.config.iris\_config module
 ------------------------------------
 
-.. automodule:: robomimic.config.iris_config
+.. automodule:: sp_robomimic.config.iris_config
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.config.td3\_bc\_config module
+sp_robomimic.config.td3\_bc\_config module
 ---------------------------------------
 
-.. automodule:: robomimic.config.td3_bc_config
+.. automodule:: sp_robomimic.config.td3_bc_config
    :members:
    :undoc-members:
    :show-inheritance:
@@ -87,7 +87,7 @@ robomimic.config.td3\_bc\_config module
 Module contents
 ---------------
 
-.. automodule:: robomimic.config
+.. automodule:: sp_robomimic.config
    :members:
    :undoc-members:
    :show-inheritance:

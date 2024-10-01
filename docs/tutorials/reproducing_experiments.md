@@ -13,5 +13,5 @@ Before trying to reproduce published results, it might be useful to read the fol
 </div>
 
 1. Follow the steps in the [Dataset Pipeline](../datasets/overview.html#dataset-pipeline) in order to download and postprocess your dataset(s) of interest.
-2. Some of the datasets provide explicit guidelines on reproducing experiments that should be followed (for example, the [CoRL 2021 robomimic datasets](../datasets/robomimic_v0.1.html#reproduce-study-results)).
+2. Some of the datasets provide explicit guidelines on reproducing experiments that should be followed (for example, the [CoRL 2021 sp_robomimic datasets](../datasets/sp_robomimic_v0.1.html#reproduce-study-results)).
 3. Otherwise, you can just follow the normal steps for [launching training runs](./configs.html) and [viewing training results](./viewing_results.html).

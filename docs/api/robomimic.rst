@@ -1,4 +1,4 @@
-robomimic package
+sp_robomimic package
 =================
 
 Subpackages
@@ -7,27 +7,27 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   robomimic.algo
-   robomimic.config
-   robomimic.envs
-   robomimic.models
-   robomimic.utils
+   sp_robomimic.algo
+   sp_robomimic.config
+   sp_robomimic.envs
+   sp_robomimic.models
+   sp_robomimic.utils
 
 Submodules
 ----------
 
-robomimic.macros module
+sp_robomimic.macros module
 -----------------------
 
-.. automodule:: robomimic.macros
+.. automodule:: sp_robomimic.macros
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.macros\_private module
+sp_robomimic.macros\_private module
 --------------------------------
 
-.. automodule:: robomimic.macros_private
+.. automodule:: sp_robomimic.macros_private
    :members:
    :undoc-members:
    :show-inheritance:
@@ -35,7 +35,7 @@ robomimic.macros\_private module
 Module contents
 ---------------
 
-.. automodule:: robomimic
+.. automodule:: sp_robomimic
    :members:
    :undoc-members:
    :show-inheritance:

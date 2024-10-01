@@ -1,9 +1,9 @@
-.. robomimic documentation master file, created by
+.. sp_robomimic documentation master file, created by
    sphinx-quickstart on Wed Apr  7 00:03:09 2021.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to robomimic's documentation!
+Welcome to sp_robomimic's documentation!
 =====================================
 
 .. toctree::
@@ -20,7 +20,7 @@ Welcome to robomimic's documentation!
    :caption: Datasets
 
    datasets/overview
-   datasets/robomimic_v0.1
+   datasets/sp_robomimic_v0.1
    datasets/mimicgen
    datasets/robosuite
    datasets/d4rl
@@ -31,7 +31,7 @@ Welcome to robomimic's documentation!
    :maxdepth: 1
    :caption: Pretrained Models
 
-   model_zoo/robomimic_v0.1
+   model_zoo/sp_robomimic_v0.1
 
 .. toctree::
    :maxdepth: 1
@@ -65,7 +65,7 @@ Welcome to robomimic's documentation!
    :maxdepth: 4
    :caption: Source API
 
-   api/robomimic
+   api/sp_robomimic
 
 .. toctree::
    :maxdepth: 1

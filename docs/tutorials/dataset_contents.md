@@ -1,6 +1,6 @@
 # Dataset Contents and Visualization
 
-This tutorial shows how to view contents of robomimic hdf5 datasets.
+This tutorial shows how to view contents of sp_robomimic hdf5 datasets.
 
 ## Viewing HDF5 Dataset Structure
 
@@ -27,16 +27,16 @@ $ python get_dataset_info.py --dataset ../../tests/assets/test_v141.hdf5
 <div class="admonition tip">
 <p class="admonition-title">Jupyter Notebook: A Deep Dive into Dataset Structure</p>
 
-Any user wishing to write custom code that works with robomimic datasets should also look at the [jupyter notebook](https://github.com/ARISE-Initiative/robomimic/blob/master/examples/notebooks/datasets.ipynb) at `examples/notebooks/datasets.ipynb`, which showcases several useful python code snippets for working with robomimic hdf5 datasets.
+Any user wishing to write custom code that works with sp_robomimic datasets should also look at the [jupyter notebook](https://github.com/ARISE-Initiative/sp_robomimic/blob/master/examples/notebooks/datasets.ipynb) at `examples/notebooks/datasets.ipynb`, which showcases several useful python code snippets for working with sp_robomimic hdf5 datasets.
 
 </div>
 
 ## Visualize Dataset Trajectories
 
 <div class="admonition note">
-<p class="admonition-title">Note: These examples are compatible with any robomimic dataset.</p>
+<p class="admonition-title">Note: These examples are compatible with any sp_robomimic dataset.</p>
 
-The examples in this section use the small hdf5 dataset packaged with the repository in `tests/assets/test_v141.hdf5` (which requires robosuite v1.4.1), but you can run these examples with any robomimic hdf5 dataset.
+The examples in this section use the small hdf5 dataset packaged with the repository in `tests/assets/test_v141.hdf5` (which requires robosuite v1.4.1), but you can run these examples with any sp_robomimic hdf5 dataset.
 
 </div>
 
