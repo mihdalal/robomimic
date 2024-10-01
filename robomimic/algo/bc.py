@@ -7,10 +7,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.distributions as D
-from neural_mp.envs.franka_pybullet_env import decompose_scene_pcd_params_obs_batched
-from neural_mp.utils.franka_utils import normalize_franka_joints
-from neural_mp.utils import franka_utils
-from neural_mp.utils.constants import FRANKA_LOWER_LIMITS, FRANKA_UPPER_LIMITS
+from skills_planning.real_world.utils.constants import FRANKA_LOWER_LIMITS, FRANKA_UPPER_LIMITS
 
 import robomimic.models.base_nets as BaseNets
 import robomimic.models.obs_nets as ObsNets

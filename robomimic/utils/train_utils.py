@@ -11,7 +11,6 @@ import shutil
 import json
 import h5py
 import imageio
-from neural_mp.combine_hdf5 import write_trajectory_to_dataset
 import numpy as np
 from copy import deepcopy
 from collections import OrderedDict
@@ -23,7 +22,6 @@ import robomimic.utils.tensor_utils as TensorUtils
 import robomimic.utils.log_utils as LogUtils
 import robomimic.utils.file_utils as FileUtils
 
-from robomimic.utils.dataset import SequenceDataset
 from robomimic.envs.env_base import EnvBase
 from robomimic.envs.wrappers import EnvWrapper
 from robomimic.algo import RolloutPolicy
@@ -168,6 +166,7 @@ def dataset_factory(config, obs_keys, filter_by_attribute=None, dataset_path=Non
         pcd_params=config.experiment.pcd_params.to_dict(),
         pad_same=config.train.pad_same,
     )
+    from robomimic.utils.dataset import SequenceDataset
     dataset = SequenceDataset(**ds_kwargs)
 
     return dataset

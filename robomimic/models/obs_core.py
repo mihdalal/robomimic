@@ -24,7 +24,6 @@ from robomimic.utils.python_utils import extract_class_init_kwargs_from_dict
 from robomimic.models.base_nets import *
 from robomimic.utils.vis_utils import visualize_image_randomizer
 from robomimic.macros import VISUALIZE_RANDOMIZER
-from neural_mp.envs.franka_pybullet_env import compute_full_pcd
 
 
 """
