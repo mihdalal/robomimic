@@ -14,6 +14,7 @@ Args:
 
     debug (bool): set this flag to run a quick training run for debugging purposes    
 """
+from neural_mp.utils.download_dataset import DatasetDownloader
 
 import argparse
 import gc
@@ -659,6 +660,42 @@ def main(rank, args):
     if args.name is not None:
         config.experiment.name = args.name
     
+    downloader = DatasetDownloader()
+
+    if args.datasets is not None:
+        processed_paths = []
+        for dataset_path in args.datasets:
+            dataset_name = os.path.basename(dataset_path)
+            if dataset_name in downloader.datasets:
+                # If the dataset is in the predefined list, use the provided path
+                if os.path.exists(dataset_path):
+                    processed_paths.append(dataset_path)
+                    print(f"Using existing downloadable dataset: {dataset_path}")
+                else:
+                    # If the file doesn't exist, attempt to download it
+                    downloaded_path = downloader.download_dataset(dataset_name)
+                    if downloaded_path:
+                        processed_paths.append(downloaded_path)
+                        print(f"Downloaded dataset: {downloaded_path}")
+                    else:
+                        print(f"Failed to download dataset: {dataset_name}")
+            else:
+                # If it's not in the list, use the provided path as is
+                if os.path.exists(dataset_path):
+                    processed_paths.append(dataset_path)
+                    print(f"Using local dataset: {dataset_path}")
+                else:
+                    print(f"Warning: Dataset not found at {dataset_path}")
+        
+        if processed_paths:
+            main_dataset = processed_paths[0]
+            additional_datasets = processed_paths[1:] if len(processed_paths) > 1 else None
+        else:
+            raise Exception("No valid datasets found or downloaded!")
+    else:
+        main_dataset = config.train.data
+        additional_datasets = None
+        
     if args.slurm:
         # check if the dataset is in /scratch/mdalal/dataset_name
         dataset_name = config.train.data.split('/')[-1]
@@ -749,7 +786,8 @@ if __name__ == "__main__":
         nargs='+',
         type=str,
         default=None,
-        help="(optional) if provided, override the dataset path defined in the config",
+        help="(optional) if provided, override the dataset path defined in the config. \
+            If the dataset doesn't exist locally, the script will attempt to download it.",
     )
 
     # debug mode
