@@ -37,8 +37,7 @@ from pytorch3d.renderer import (
      AlphaCompositor,
      NormWeightedCompositor
  )
-
-from neural_mp.envs.franka_pybullet_env import depth_to_rgb, compute_full_pcd
+from neural_mp.utils.pcd_utils import compute_full_pcd, depth_to_rgb
 import h5py
 
 class EnvMP(EB.EnvBase, gymnasium.Env):
