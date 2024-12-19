@@ -1,15 +1,15 @@
 # Contributing Guidelines
 
-Our team wholeheartedly welcomes the community to contribute to robomimic. Contributions from members of the community will help ensure the long-term success of this project. Before you plan to make contributions, here are important resources to get started with:
+Our team wholeheartedly welcomes the community to contribute to manipgen_robomimic. Contributions from members of the community will help ensure the long-term success of this project. Before you plan to make contributions, here are important resources to get started with:
 
-- Read the robomimic [documentation](https://robomimic.github.io/docs/introduction/overview.html) and [paper](https://arxiv.org/abs/2108.03298)
-- Check our latest status from existing [issues](https://github.com/ARISE-Initiative/robomimic/issues), [pull requests](https://github.com/ARISE-Initiative/robomimic/pulls), and [branches](https://github.com/ARISE-Initiative/robomimic/branches) and avoid duplicate efforts
+- Read the manipgen_robomimic [documentation](https://manipgen_robomimic.github.io/docs/introduction/overview.html) and [paper](https://arxiv.org/abs/2108.03298)
+- Check our latest status from existing [issues](https://github.com/ARISE-Initiative/manipgen_robomimic/issues), [pull requests](https://github.com/ARISE-Initiative/manipgen_robomimic/pulls), and [branches](https://github.com/ARISE-Initiative/manipgen_robomimic/branches) and avoid duplicate efforts
 - Join our [ARISE Slack](https://ariseinitiative.slack.com) workspace for technical discussions. Please [email us](mailto:yukez@cs.utexas.edu) to be added to the workspace.
 
 We encourage the community to make four major types of contributions:
 
 - **Bug fixes**: Address open issues and fix bugs presented in the `master` branch.
-- **Additional datasets and tasks:** Make robomimic compatible with more kinds of datasets, simulators, and tasks.
+- **Additional datasets and tasks:** Make manipgen_robomimic compatible with more kinds of datasets, simulators, and tasks.
 - **New algorithms:** Develop new algorithms or re-implement existing algorithms for learning from robot manipulation datasets.
 - **Implement new functionalities:** Implement new features, such as training with new kinds of observations (depth images, lidar, force/torque sensors).
 
@@ -17,7 +17,7 @@ Testing
 -------
 Before submitting your contributions, make sure that the changes do not break existing functionalities. We have a handful of tests for verifying the correctness of the code.
 
-You can run all the tests with the following command in the tests folder of robomimic. Make sure that it does not throw any error before you proceed to the next step. Note that the tests can take a few minutes to run.
+You can run all the tests with the following command in the tests folder of manipgen_robomimic. Make sure that it does not throw any error before you proceed to the next step. Note that the tests can take a few minutes to run.
 
 ```sh
 $ bash test.sh
@@ -25,7 +25,7 @@ $ bash test.sh
 
 Submission
 ----------
-Please read the coding conventions below and make sure that your code is consistent with ours. When making a contribution, make a [pull request](https://docs.github.com/en/free-pro-team@latest/github/collaborating-with-issues-and-pull-requests/proposing-changes-to-your-work-with-pull-requests) to robomimic with an itemized list of what you have done. When you submit a pull request, it is immensely helpful to include example script(s) that showcase the proposed changes and highlight any new APIs. We always love to see more test coverage. When it is appropriate, add a new test to the tests folder for checking the correctness of your code.
+Please read the coding conventions below and make sure that your code is consistent with ours. When making a contribution, make a [pull request](https://docs.github.com/en/free-pro-team@latest/github/collaborating-with-issues-and-pull-requests/proposing-changes-to-your-work-with-pull-requests) to manipgen_robomimic with an itemized list of what you have done. When you submit a pull request, it is immensely helpful to include example script(s) that showcase the proposed changes and highlight any new APIs. We always love to see more test coverage. When it is appropriate, add a new test to the tests folder for checking the correctness of your code.
 
 Coding Conventions
 ------------------
@@ -50,5 +50,5 @@ We also list additional suggested contributing guidelines that we adhered to dur
 
 We look forward to your contributions. Thanks!
 
-**The robomimic core team**
+**The manipgen_robomimic core team**
 

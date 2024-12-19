@@ -1,109 +1,109 @@
-robomimic.utils package
+manipgen_robomimic.utils package
 =======================
 
 Submodules
 ----------
 
-robomimic.utils.dataset module
+manipgen_robomimic.utils.dataset module
 ------------------------------
 
-.. automodule:: robomimic.utils.dataset
+.. automodule:: manipgen_robomimic.utils.dataset
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.utils.env\_utils module
+manipgen_robomimic.utils.env\_utils module
 ---------------------------------
 
-.. automodule:: robomimic.utils.env_utils
+.. automodule:: manipgen_robomimic.utils.env_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.utils.file\_utils module
+manipgen_robomimic.utils.file\_utils module
 ----------------------------------
 
-.. automodule:: robomimic.utils.file_utils
+.. automodule:: manipgen_robomimic.utils.file_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.utils.hyperparam\_utils module
+manipgen_robomimic.utils.hyperparam\_utils module
 ----------------------------------------
 
-.. automodule:: robomimic.utils.hyperparam_utils
+.. automodule:: manipgen_robomimic.utils.hyperparam_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.utils.log\_utils module
+manipgen_robomimic.utils.log\_utils module
 ---------------------------------
 
-.. automodule:: robomimic.utils.log_utils
+.. automodule:: manipgen_robomimic.utils.log_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.utils.loss\_utils module
+manipgen_robomimic.utils.loss\_utils module
 ----------------------------------
 
-.. automodule:: robomimic.utils.loss_utils
+.. automodule:: manipgen_robomimic.utils.loss_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.utils.obs\_utils module
+manipgen_robomimic.utils.obs\_utils module
 ---------------------------------
 
-.. automodule:: robomimic.utils.obs_utils
+.. automodule:: manipgen_robomimic.utils.obs_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.utils.python\_utils module
+manipgen_robomimic.utils.python\_utils module
 ------------------------------------
 
-.. automodule:: robomimic.utils.python_utils
+.. automodule:: manipgen_robomimic.utils.python_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.utils.tensor\_utils module
+manipgen_robomimic.utils.tensor\_utils module
 ------------------------------------
 
-.. automodule:: robomimic.utils.tensor_utils
+.. automodule:: manipgen_robomimic.utils.tensor_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.utils.test\_utils module
+manipgen_robomimic.utils.test\_utils module
 ----------------------------------
 
-.. automodule:: robomimic.utils.test_utils
+.. automodule:: manipgen_robomimic.utils.test_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.utils.torch\_utils module
+manipgen_robomimic.utils.torch\_utils module
 -----------------------------------
 
-.. automodule:: robomimic.utils.torch_utils
+.. automodule:: manipgen_robomimic.utils.torch_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.utils.train\_utils module
+manipgen_robomimic.utils.train\_utils module
 -----------------------------------
 
-.. automodule:: robomimic.utils.train_utils
+.. automodule:: manipgen_robomimic.utils.train_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.utils.vis\_utils module
+manipgen_robomimic.utils.vis\_utils module
 ---------------------------------
 
-.. automodule:: robomimic.utils.vis_utils
+.. automodule:: manipgen_robomimic.utils.vis_utils
    :members:
    :undoc-members:
    :show-inheritance:
@@ -111,7 +111,7 @@ robomimic.utils.vis\_utils module
 Module contents
 ---------------
 
-.. automodule:: robomimic.utils
+.. automodule:: manipgen_robomimic.utils
    :members:
    :undoc-members:
    :show-inheritance:

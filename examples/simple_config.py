@@ -1,7 +1,7 @@
 """
 An example for creating and using the custom Config object.
 """
-from robomimic.config.base_config import Config
+from manipgen_robomimic.config.base_config import Config
 
 if __name__ == "__main__":
 

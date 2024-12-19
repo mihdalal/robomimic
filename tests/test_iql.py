@@ -7,11 +7,11 @@ to see stdout output).
 import argparse
 from collections import OrderedDict
 
-import robomimic
-from robomimic.config import Config
-import robomimic.utils.test_utils as TestUtils
-from robomimic.utils.log_utils import silence_stdout
-from robomimic.utils.torch_utils import dummy_context_mgr
+import manipgen_robomimic
+from manipgen_robomimic.config import Config
+import manipgen_robomimic.utils.test_utils as TestUtils
+from manipgen_robomimic.utils.log_utils import silence_stdout
+from manipgen_robomimic.utils.torch_utils import dummy_context_mgr
 
 
 def get_algo_base_config():

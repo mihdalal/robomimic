@@ -11,15 +11,15 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
-import robomimic
-import robomimic.utils.obs_utils as ObsUtils
-import robomimic.utils.torch_utils as TorchUtils
-import robomimic.utils.test_utils as TestUtils
-import robomimic.utils.file_utils as FileUtils
-from robomimic.utils.dataset import SequenceDataset
+import manipgen_robomimic
+import manipgen_robomimic.utils.obs_utils as ObsUtils
+import manipgen_robomimic.utils.torch_utils as TorchUtils
+import manipgen_robomimic.utils.test_utils as TestUtils
+import manipgen_robomimic.utils.file_utils as FileUtils
+from manipgen_robomimic.utils.dataset import SequenceDataset
 
-from robomimic.config import config_factory
-from robomimic.algo import algo_factory
+from manipgen_robomimic.config import config_factory
+from manipgen_robomimic.algo import algo_factory
 
 
 def get_data_loader(dataset_path):

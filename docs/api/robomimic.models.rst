@@ -1,69 +1,69 @@
-robomimic.models package
+manipgen_robomimic.models package
 ========================
 
 Submodules
 ----------
 
-robomimic.models.base\_nets module
+manipgen_robomimic.models.base\_nets module
 ----------------------------------
 
-.. automodule:: robomimic.models.base_nets
+.. automodule:: manipgen_robomimic.models.base_nets
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.models.distributions module
+manipgen_robomimic.models.distributions module
 -------------------------------------
 
-.. automodule:: robomimic.models.distributions
+.. automodule:: manipgen_robomimic.models.distributions
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.models.obs\_core module
+manipgen_robomimic.models.obs\_core module
 ---------------------------------
 
-.. automodule:: robomimic.models.obs_core
+.. automodule:: manipgen_robomimic.models.obs_core
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.models.obs\_nets module
+manipgen_robomimic.models.obs\_nets module
 ---------------------------------
 
-.. automodule:: robomimic.models.obs_nets
+.. automodule:: manipgen_robomimic.models.obs_nets
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.models.policy\_nets module
+manipgen_robomimic.models.policy\_nets module
 ------------------------------------
 
-.. automodule:: robomimic.models.policy_nets
+.. automodule:: manipgen_robomimic.models.policy_nets
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.models.transformers module
+manipgen_robomimic.models.transformers module
 ------------------------------------
 
-.. automodule:: robomimic.models.transformers
+.. automodule:: manipgen_robomimic.models.transformers
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.models.vae\_nets module
+manipgen_robomimic.models.vae\_nets module
 ---------------------------------
 
-.. automodule:: robomimic.models.vae_nets
+.. automodule:: manipgen_robomimic.models.vae_nets
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.models.value\_nets module
+manipgen_robomimic.models.value\_nets module
 -----------------------------------
 
-.. automodule:: robomimic.models.value_nets
+.. automodule:: manipgen_robomimic.models.value_nets
    :members:
    :undoc-members:
    :show-inheritance:
@@ -71,7 +71,7 @@ robomimic.models.value\_nets module
 Module contents
 ---------------
 
-.. automodule:: robomimic.models
+.. automodule:: manipgen_robomimic.models
    :members:
    :undoc-members:
    :show-inheritance:

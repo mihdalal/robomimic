@@ -1,6 +1,6 @@
 # Pre-trained Visual Representations
 
-**Robomimic** supports multiple pre-trained visual representations and offers integration for adapting observation encoders to the desired pre-trained visual representation encoders.
+**manipgen_robomimic** supports multiple pre-trained visual representations and offers integration for adapting observation encoders to the desired pre-trained visual representation encoders.
 
 ## Terminology
 

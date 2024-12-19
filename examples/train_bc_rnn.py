@@ -18,12 +18,12 @@ To run a full length training run on your own dataset, use the following command
 """
 import argparse
 
-import robomimic
-import robomimic.utils.torch_utils as TorchUtils
-import robomimic.utils.test_utils as TestUtils
-import robomimic.macros as Macros
-from robomimic.config import config_factory
-from robomimic.scripts.train import train
+import manipgen_robomimic
+import manipgen_robomimic.utils.torch_utils as TorchUtils
+import manipgen_robomimic.utils.test_utils as TestUtils
+import manipgen_robomimic.macros as Macros
+from manipgen_robomimic.config import config_factory
+from manipgen_robomimic.scripts.train import train
 
 
 def robosuite_hyperparameters(config):

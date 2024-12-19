@@ -7,14 +7,14 @@
 - [conda](https://www.anaconda.com/products/individual) 
   - [virtualenv](https://virtualenv.pypa.io/en/latest/) is also an acceptable alternative, but we assume you have conda installed in our examples below
 
-## Install robomimic
+## Install manipgen_robomimic
 
 <div class="admonition note">
 <p class="admonition-title">1. Create and activate conda environment</p>
 
 ```sh
-$ conda create -n robomimic_venv python=3.8.0
-$ conda activate robomimic_venv
+$ conda create -n manipgen_robomimic_venv python=3.8.0
+$ conda activate manipgen_robomimic_venv
 ```
 
 </div>
@@ -53,7 +53,7 @@ $ conda install pytorch==2.0.0 torchvision==0.15.1 -c pytorch
 
 
 <div class="admonition note">
-<p class="admonition-title">3. Install robomimic</p>
+<p class="admonition-title">3. Install manipgen_robomimic</p>
 
 <details>
   <summary><b>Option 1: Install from source <i>(recommended)</i></b></summary>
@@ -61,8 +61,8 @@ $ conda install pytorch==2.0.0 torchvision==0.15.1 -c pytorch
 
 ```sh
 $ cd <PATH_TO_YOUR_INSTALL_DIRECTORY>
-$ git clone https://github.com/ARISE-Initiative/robomimic.git
-$ cd robomimic
+$ git clone https://github.com/ARISE-Initiative/manipgen_robomimic.git
+$ cd manipgen_robomimic
 $ pip install -e .
 ```
 
@@ -74,7 +74,7 @@ $ pip install -e .
 <p>
 
 ```sh
-$ pip install robomimic
+$ pip install manipgen_robomimic
 ```
 
 </p>
@@ -85,7 +85,7 @@ $ pip install robomimic
 <div class="admonition warning">
 <p class="admonition-title">Warning! Additional dependencies might be required</p>
 
-This is all you need for using the suite of algorithms and utilities packaged with robomimic. However, to use our demonstration datasets, you may need additional dependencies. Please see the [datasets page](../datasets/overview.html) for more information on downloading datasets and reproducing experiments, and see [the simulators section below](installation.html#install-simulators).
+This is all you need for using the suite of algorithms and utilities packaged with manipgen_robomimic. However, to use our demonstration datasets, you may need additional dependencies. Please see the [datasets page](../datasets/overview.html) for more information on downloading datasets and reproducing experiments, and see [the simulators section below](installation.html#install-simulators).
 </div>
 
 
@@ -97,12 +97,12 @@ See the [datasets page](../datasets/overview.html) for more information on downl
 
 ## Install simulators
 
-If you would like to run robomimic examples and work with released datasets, please install the following simulators:
+If you would like to run manipgen_robomimic examples and work with released datasets, please install the following simulators:
 
 <details>
   <summary><b>robosuite</b></summary>
 <p>
- Required for running most robomimic examples and released datasets. Compatible with robosuite v1.2+. Install via:
+ Required for running most manipgen_robomimic examples and released datasets. Compatible with robosuite v1.2+. Install via:
 
 ```sh
 # From source (recommended)
@@ -147,17 +147,17 @@ Install via the instructions [here](https://github.com/rail-berkeley/d4rl).
 
 
 ## Test your installation
-This assumes you have installed robomimic from source.
+This assumes you have installed manipgen_robomimic from source.
 
-Run a quick debugging (dummy) training loop to make sure robomimic is installed correctly:
+Run a quick debugging (dummy) training loop to make sure manipgen_robomimic is installed correctly:
 ```sh
-$ cd <PATH_TO_ROBOMIMIC_INSTALL_DIR>
+$ cd <PATH_TO_manipgen_robomimic_INSTALL_DIR>
 $ python examples/train_bc_rnn.py --debug
 ```
 
 Run a much more thorough test of several algorithms and scripts (**Warning: this script may take several minutes to finish!**):
 ```sh
-$ cd <PATH_TO_ROBOMIMIC_INSTALL_DIR>/tests
+$ cd <PATH_TO_manipgen_robomimic_INSTALL_DIR>/tests
 $ bash test.sh
 ```
 
@@ -173,7 +173,7 @@ $ pip install -r requirements-docs.txt
 
 You can test generating the documentation and viewing it locally in a web browser:
 ```sh
-$ cd <PATH_TO_ROBOMIMIC_INSTALL_DIR>/docs
+$ cd <PATH_TO_manipgen_robomimic_INSTALL_DIR>/docs
 $ make clean
 $ make apidoc
 $ make html

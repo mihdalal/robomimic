@@ -13,11 +13,11 @@ import torch
 from collections import OrderedDict
 from termcolor import colored
 
-import robomimic
-import robomimic.utils.test_utils as TestUtils
-import robomimic.utils.torch_utils as TorchUtils
-from robomimic.utils.log_utils import silence_stdout
-from robomimic.utils.torch_utils import dummy_context_mgr
+import manipgen_robomimic
+import manipgen_robomimic.utils.test_utils as TestUtils
+import manipgen_robomimic.utils.torch_utils as TorchUtils
+from manipgen_robomimic.utils.log_utils import silence_stdout
+from manipgen_robomimic.utils.torch_utils import dummy_context_mgr
 
 
 def test_example_script(script_name, args_string, test_name, silence=True):
@@ -29,7 +29,7 @@ def test_example_script(script_name, args_string, test_name, silence=True):
 
     # run example script
     stdout = subprocess.DEVNULL if silence else None
-    path_to_script = os.path.join(robomimic.__path__[0], "../examples/{}".format(script_name))
+    path_to_script = os.path.join(manipgen_robomimic.__path__[0], "../examples/{}".format(script_name))
     example_job = subprocess.Popen("python {} {}".format(path_to_script, args_string), 
         shell=True, stdout=stdout, stderr=subprocess.PIPE)
     example_job.wait()

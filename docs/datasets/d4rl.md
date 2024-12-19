@@ -8,7 +8,7 @@ The [D4RL](https://arxiv.org/abs/2004.07219) benchmark provides a set of locomot
 Use `convert_d4rl.py` in the `scripts/conversion` folder to automatically download and postprocess the D4RL dataset in a single step. For example:
 
 ```sh
-# by default, download to robomimic/datasets
+# by default, download to manipgen_robomimic/datasets
 $ python convert_d4rl.py --env walker2d-medium-expert-v2
 # download to specific folder
 $ python convert_d4rl.py --env walker2d-medium-expert-v2 --folder /path/to/output/folder/
@@ -42,7 +42,7 @@ Below, we provide a table of results on common D4RL datasets using the algorithm
 
 ### Reproducing D4RL Results
 
-In order to reproduce the results above, first make sure that the `generate_paper_configs.py` script has been run, where the `--dataset_dir` argument is consistent with the folder where the D4RL datasets were downloaded using the `convert_d4rl.py` script. This is also the first step for reproducing results on the released robot manipulation datasets. The `--config_dir` directory used in the script (`robomimic/exps/paper` by default) will contain a `d4rl.sh` script, and a `d4rl` subdirectory that contains all the json configs. The table results above can be generated simply by running the training commands in the shell script.
+In order to reproduce the results above, first make sure that the `generate_paper_configs.py` script has been run, where the `--dataset_dir` argument is consistent with the folder where the D4RL datasets were downloaded using the `convert_d4rl.py` script. This is also the first step for reproducing results on the released robot manipulation datasets. The `--config_dir` directory used in the script (`manipgen_robomimic/exps/paper` by default) will contain a `d4rl.sh` script, and a `d4rl` subdirectory that contains all the json configs. The table results above can be generated simply by running the training commands in the shell script.
 
 ## Citation
 ```sh

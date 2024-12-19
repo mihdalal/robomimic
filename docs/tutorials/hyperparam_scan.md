@@ -120,8 +120,8 @@ First, we define a function `make_generator` that creates a `ConfigGenerator` ob
 After this, our next step will be to set hyperparameter values.
 
 ```python
-import robomimic
-import robomimic.utils.hyperparam_utils as HyperparamUtils
+import manipgen_robomimic
+import manipgen_robomimic.utils.hyperparam_utils as HyperparamUtils
 
 
 def make_generator(config_file, script_file):

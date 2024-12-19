@@ -7,11 +7,11 @@ functionality.
 from collections import OrderedDict
 
 import torch
-from robomimic.models.base_nets import MLP
-from robomimic.models.obs_nets import ObservationEncoder, ObservationDecoder
-from robomimic.models.obs_core import CropRandomizer
-import robomimic.utils.tensor_utils as TensorUtils
-import robomimic.utils.obs_utils as ObsUtils
+from manipgen_robomimic.models.base_nets import MLP
+from manipgen_robomimic.models.obs_nets import ObservationEncoder, ObservationDecoder
+from manipgen_robomimic.models.obs_core import CropRandomizer
+import manipgen_robomimic.utils.tensor_utils as TensorUtils
+import manipgen_robomimic.utils.obs_utils as ObsUtils
 
 
 def simple_obs_example():
