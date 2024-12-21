@@ -7,11 +7,11 @@ your environment's observations
 
 import numpy as np
 import torch
-import robomimic
-from robomimic.models import EncoderCore, Randomizer
-from robomimic.utils.obs_utils import Modality, ScanModality
-from robomimic.config.bc_config import BCConfig
-import robomimic.utils.tensor_utils as TensorUtils
+import manipgen_robomimic
+from manipgen_robomimic.models import EncoderCore, Randomizer
+from manipgen_robomimic.utils.obs_utils import Modality, ScanModality
+from manipgen_robomimic.config.bc_config import BCConfig
+import manipgen_robomimic.utils.tensor_utils as TensorUtils
 
 
 # Let's create a new modality to handle observation modalities, which will be interpreted as
