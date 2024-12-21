@@ -11,7 +11,7 @@ lines = [x for x in lines if (('.png' not in x) and ('.gif' not in x))]
 long_description = ''.join(lines)
 
 setup(
-    name="manipgen_manipgen_robomimic",
+    name="manipgen_robomimic",
     packages=[
         package for package in find_packages() if package.startswith("manipgen_robomimic")
     ],
