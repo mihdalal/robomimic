@@ -12,7 +12,7 @@ Args:
         written to generated configs.
 
 Example usage:
-    # Assume datasets alredy exist in robomimic/../datasets folder. Configs will be generated under robomimic/exps/paper
+    # Assume datasets alredy exist in manipgen_robomimic/../datasets folder. Configs will be generated under manipgen_robomimic/exps/paper
     python generate_paper_configs.py --output_dir /tmp/experiment_results
 
     # Specify where datasets exist, and specify where configs should be generated.

@@ -232,7 +232,7 @@ def update_config(cfg):
     """
     Updates the config for backwards-compatibility if it uses outdated configurations.
 
-    See https://github.com/ARISE-Initiative/robomimic/releases/tag/v0.2.0 for more info.
+    See https://github.com/ARISE-Initiative/manipgen_robomimic/releases/tag/v0.2.0 for more info.
 
     Args:
         cfg (dict): Raw dictionary of config values

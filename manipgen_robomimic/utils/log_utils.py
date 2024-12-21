@@ -210,7 +210,7 @@ def log_warning(message, color="yellow", print_now=True):
             addition to adding it to the global warning buffer
     """
     global WARNINGS_BUFFER
-    buffer_message = colored("ROBOMIMIC WARNING(\n{}\n)".format(textwrap.indent(message, "    ")), color)
+    buffer_message = colored("manipgen_robomimic WARNING(\n{}\n)".format(textwrap.indent(message, "    ")), color)
     WARNINGS_BUFFER.append(buffer_message)
     if print_now:
         print(buffer_message)

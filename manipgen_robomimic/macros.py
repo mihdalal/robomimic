@@ -1,5 +1,5 @@
 """
-Set of global variables shared across robomimic
+Set of global variables shared across manipgen_robomimic
 """
 # Sets debugging mode. Should be set at top-level script so that internal
 # debugging functionalities are made active

@@ -1,45 +1,45 @@
-robomimic.envs package
+manipgen_robomimic.envs package
 ======================
 
 Submodules
 ----------
 
-robomimic.envs.env\_base module
+manipgen_robomimic.envs.env\_base module
 -------------------------------
 
-.. automodule:: robomimic.envs.env_base
+.. automodule:: manipgen_robomimic.envs.env_base
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.envs.env\_gym module
+manipgen_robomimic.envs.env\_gym module
 ------------------------------
 
-.. automodule:: robomimic.envs.env_gym
+.. automodule:: manipgen_robomimic.envs.env_gym
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.envs.env\_ig\_momart module
+manipgen_robomimic.envs.env\_ig\_momart module
 -------------------------------------
 
-.. automodule:: robomimic.envs.env_ig_momart
+.. automodule:: manipgen_robomimic.envs.env_ig_momart
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.envs.env\_robosuite module
+manipgen_robomimic.envs.env\_robosuite module
 ------------------------------------
 
-.. automodule:: robomimic.envs.env_robosuite
+.. automodule:: manipgen_robomimic.envs.env_robosuite
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.envs.wrappers module
+manipgen_robomimic.envs.wrappers module
 ------------------------------
 
-.. automodule:: robomimic.envs.wrappers
+.. automodule:: manipgen_robomimic.envs.wrappers
    :members:
    :undoc-members:
    :show-inheritance:
@@ -47,7 +47,7 @@ robomimic.envs.wrappers module
 Module contents
 ---------------
 
-.. automodule:: robomimic.envs
+.. automodule:: manipgen_robomimic.envs
    :members:
    :undoc-members:
    :show-inheritance:

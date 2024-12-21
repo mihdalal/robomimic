@@ -8,18 +8,18 @@ margin: auto;
 }
 </style>
 
-Datasets capture recorded environment data and are used as inputs to a given offline RL or IL algorithm in **robomimic**. In general, you can use datasets with **robomimic** by:
+Datasets capture recorded environment data and are used as inputs to a given offline RL or IL algorithm in **manipgen_robomimic**. In general, you can use datasets with **manipgen_robomimic** by:
 
 1. **Downloading** the desired dataset
-2. **Postprocessing** the dataset to guarantee compatibility with robomimic
-3. **Training** agent(s) in robomimic with dataset
+2. **Postprocessing** the dataset to guarantee compatibility with manipgen_robomimic
+3. **Training** agent(s) in manipgen_robomimic with dataset
 
-**robomimic** currently supports the following datasets out of the box. Click on the corresponding **(1) Downloading** link to download the dataset and the corresponding **(2) Postprocessing** link for postprocessing that dataset.
+**manipgen_robomimic** currently supports the following datasets out of the box. Click on the corresponding **(1) Downloading** link to download the dataset and the corresponding **(2) Postprocessing** link for postprocessing that dataset.
 
 
 |          **Dataset**          | <center>**Task Types**</center> | **Downloading** | **Postprocessing**  |
 | ----------------------------- | :-------------: | :-------------: | :-------------: |
-| [**robomimic v0.1**](robomimic_v0.1.html)| Sim + Real Robot Manipulation | [Link](robomimic_v0.1.html#downloading)  | [Link](robomimic_v0.1.html#postprocessing)  |
+| [**manipgen_robomimic v0.1**](manipgen_robomimic_v0.1.html)| Sim + Real Robot Manipulation | [Link](manipgen_robomimic_v0.1.html#downloading)  | [Link](manipgen_robomimic_v0.1.html#postprocessing)  |
 | [**MimicGen**](mimicgen.html)              | Sim Robot Manipulation | [Link](mimicgen.html#downloading)  | [Link](mimicgen.html#postprocessing)  |
 | [**D4RL**](d4rl.html)                      | Sim Locomotion | [Link](d4rl.html#downloading)  | [Link](d4rl.html#postprocessing)  |
 | [**MOMART**](momart.html)                    | Sim Mobile Manipulation | [Link](momart.html#downloading)  | [Link](momart.html#postprocessing)  |
@@ -34,7 +34,7 @@ python train.py --dataset <PATH_TO_POSTPROCESSED_DATASET> --config <PATH_TO_CONF
 
 ## Generating Your Own Dataset
 
-**robomimic** provides tutorials for collecting custom datasets for specific environment platforms. Click on any of the links below for more information for the specific environment setup:
+**manipgen_robomimic** provides tutorials for collecting custom datasets for specific environment platforms. Click on any of the links below for more information for the specific environment setup:
 
 |          **Environment Platform**          | **Task Types** |
 | ----------------------------- | :---------------------: |
@@ -50,7 +50,7 @@ If you want to generate your own dataset in a custom environment platform that i
 
 ## Dataset Structure
 
-All postprocessed **robomimic** compatible datasets share the same data structure. A single dataset is a single HDF5 file with the following structure:
+All postprocessed **manipgen_robomimic** compatible datasets share the same data structure. A single dataset is a single HDF5 file with the following structure:
 
 <details>
   <summary><b>HDF5 Structure <span style="color:red;">(click to expand)</span></b></summary>
@@ -60,7 +60,7 @@ All postprocessed **robomimic** compatible datasets share the same data structur
 
   - **`total`** (attribute) - number of state-action samples in the dataset
 
-  - **`env_args`** (attribute) - a json string that contains metadata on the environment and relevant arguments used for collecting data. Three keys: `env_name`, the name of the environment or task to create, `env_type`, one of robomimic's supported [environment types](https://github.com/ARISE-Initiative/robomimic/blob/master/robomimic/envs/env_base.py#L9), and `env_kwargs`, a dictionary of keyword-arguments to be passed into the environment of type `env_name`.
+  - **`env_args`** (attribute) - a json string that contains metadata on the environment and relevant arguments used for collecting data. Three keys: `env_name`, the name of the environment or task to create, `env_type`, one of manipgen_robomimic's supported [environment types](https://github.com/ARISE-Initiative/manipgen_robomimic/blob/master/manipgen_robomimic/envs/env_base.py#L9), and `env_kwargs`, a dictionary of keyword-arguments to be passed into the environment of type `env_name`.
 
   - **`demo_0`** (group) - group for the first trajectory (every trajectory has a group)
 
@@ -103,7 +103,7 @@ All postprocessed **robomimic** compatible datasets share the same data structur
 
 ### Data Conventions
 
-**robomimic**-compatible datasets expect certain values (such as images and actions) to be formatted a specific way. See the below sections for further details:
+**manipgen_robomimic**-compatible datasets expect certain values (such as images and actions) to be formatted a specific way. See the below sections for further details:
 
 <details>
   <summary><b>Storing images</b></summary>
@@ -143,7 +143,7 @@ The `get_dataset_info.py` script can be used to sanity check stored actions, and
 
 Filter keys enable arbitrary splitting of a dataset into sub-groups, and allow training on a specific subset of the data.
 
-A common use-case is to split data into train-validation splits. We provide a convenience script for doing this in the `robomimic/scripts` directory:
+A common use-case is to split data into train-validation splits. We provide a convenience script for doing this in the `manipgen_robomimic/scripts` directory:
 
 ```sh
 $ python split_train_val.py --dataset /path/to/dataset.hdf5 --ratio 0.1 --filter_key <FILTER_KEY_NAME>

@@ -11,7 +11,7 @@ import manipgen_robomimic.envs.env_base as EB
 
 class EnvWrapper(object):
     """
-    Base class for all environment wrappers in robomimic.
+    Base class for all environment wrappers in manipgen_robomimic.
     """
     def __init__(self, env):
         """

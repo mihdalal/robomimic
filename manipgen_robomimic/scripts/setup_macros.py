@@ -5,7 +5,7 @@ The private macros file (macros_private.py) is not tracked by git,
 allowing user-specific settings that are not tracked by git.
 
 This script checks if macros_private.py exists.
-If applicable, it creates the private macros at robomimic/macros_private.py
+If applicable, it creates the private macros at manipgen_robomimic/macros_private.py
 """
 
 import os

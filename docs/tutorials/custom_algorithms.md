@@ -1,6 +1,6 @@
 # Implementing Custom Algorithms
 
-This tutorial provides an example of implementing a custom algorithm in robomimic. We choose to implement the recently proposed [TD3-BC](https://arxiv.org/abs/2106.06860) algorithm.
+This tutorial provides an example of implementing a custom algorithm in manipgen_robomimic. We choose to implement the recently proposed [TD3-BC](https://arxiv.org/abs/2106.06860) algorithm.
 
 This consists of the following steps:
 1. Implement a custom `Config` class for TD3-BC.
@@ -64,7 +64,7 @@ class TD3_BCConfig(BaseConfig):
 
 Usually, we only need to implement the `algo_config` function to populate `config.algo` with the keys needed for the algorithm, but we also update the `experiment_config` function and `observation_config` function to make it easier to reproduce experiments on `gym` environments from the paper. See the source file for more details.
 
-Finally, we add the line `from robomimic.config.td3_bc_config import TD3_BCConfig` to `config/__init__.py` to make sure this `Config` subclass is registered by `robomimic`.
+Finally, we add the line `from manipgen_robomimic.config.td3_bc_config import TD3_BCConfig` to `config/__init__.py` to make sure this `Config` subclass is registered by `manipgen_robomimic`.
 
 
 ## Implementing the Algo class
@@ -358,7 +358,7 @@ Finally, we describe the `get_action` implementation - which is used at test-tim
         return self.nets["actor"](obs_dict=obs_dict, goal_dict=goal_dict)
 ```
 
-Finally, we add the line `from robomimic.algo.td3_bc import TD3_BC` to `algo/__init__.py` to make sure this `Algo` subclass is registered by `robomimic`.
+Finally, we add the line `from manipgen_robomimic.algo.td3_bc import TD3_BC` to `algo/__init__.py` to make sure this `Algo` subclass is registered by `manipgen_robomimic`.
 
 That's it! See `algo/td3_bc.py` for the complete implementation, and compare it to `algo/bcq.py` to see the similarity between the two implementations. 
 

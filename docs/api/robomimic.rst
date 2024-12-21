@@ -1,4 +1,4 @@
-robomimic package
+manipgen_robomimic package
 =================
 
 Subpackages
@@ -7,27 +7,27 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   robomimic.algo
-   robomimic.config
-   robomimic.envs
-   robomimic.models
-   robomimic.utils
+   manipgen_robomimic.algo
+   manipgen_robomimic.config
+   manipgen_robomimic.envs
+   manipgen_robomimic.models
+   manipgen_robomimic.utils
 
 Submodules
 ----------
 
-robomimic.macros module
+manipgen_robomimic.macros module
 -----------------------
 
-.. automodule:: robomimic.macros
+.. automodule:: manipgen_robomimic.macros
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.macros\_private module
+manipgen_robomimic.macros\_private module
 --------------------------------
 
-.. automodule:: robomimic.macros_private
+.. automodule:: manipgen_robomimic.macros_private
    :members:
    :undoc-members:
    :show-inheritance:
@@ -35,7 +35,7 @@ robomimic.macros\_private module
 Module contents
 ---------------
 
-.. automodule:: robomimic
+.. automodule:: manipgen_robomimic
    :members:
    :undoc-members:
    :show-inheritance:

@@ -210,5 +210,5 @@ if __name__ == "__main__":
     # Let's view our config
     print(config)
 
-    # That's it! Now we can pass this config into our training script, and robomimic will directly use our
+    # That's it! Now we can pass this config into our training script, and manipgen_robomimic will directly use our
     # custom modality + encoder network

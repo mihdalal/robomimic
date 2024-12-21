@@ -5,7 +5,7 @@ collections of tensors.
 
 ## TensorUtils
 
-Most models in **robomimic** operate on nested tensor dictionaries, both for input and training labels. We provide a suite of utilities to work with these dictionaries in `robomimic.utils.tensor_utils`. For example, given a numpy dictionary of observations:
+Most models in **manipgen_robomimic** operate on nested tensor dictionaries, both for input and training labels. We provide a suite of utilities to work with these dictionaries in `manipgen_robomimic.utils.tensor_utils`. For example, given a numpy dictionary of observations:
 ```python
 import numpy as np
 
@@ -18,11 +18,11 @@ x = {
 }
 ```
 
-For example, we can use `robomimic.utils.tensor_utils` to convert them to pytorch tensors, add a batch dimension, and send them to GPU:
+For example, we can use `manipgen_robomimic.utils.tensor_utils` to convert them to pytorch tensors, add a batch dimension, and send them to GPU:
 
 ```python
 import torch
-import robomimic.utils.tensor_utils as TensorUtils
+import manipgen_robomimic.utils.tensor_utils as TensorUtils
 
 # Converts all numpy arrays in nested dictionary or list or tuple to torch tensors
 x = TensorUtils.to_tensor(x)  
@@ -55,12 +55,12 @@ In addition, `map_tensor` allows applying an arbitrary function to all tensors i
 x = TensorUtils.map_tensor(x, your_func)
 ```
 
-The complete documentation of `robomimic.utils.tensor_utils.py` is available [here](../api/robomimic.utils.html#module-robomimic.utils.tensor_utils).
+The complete documentation of `manipgen_robomimic.utils.tensor_utils.py` is available [here](../api/manipgen_robomimic.utils.html#module-manipgen_robomimic.utils.tensor_utils).
 
 
 ## ObsUtils
 
-`robomimic.utils.obs_utils` implements a suite of utility functions to preprocess different observation modalities such as images and functions to determine types of observations in order to create suitable encoder network architectures. Below we list the important functions.
+`manipgen_robomimic.utils.obs_utils` implements a suite of utility functions to preprocess different observation modalities such as images and functions to determine types of observations in order to create suitable encoder network architectures. Below we list the important functions.
 
 - **initialize_obs_utils_with_obs_specs(obs_modality_specs)**
     

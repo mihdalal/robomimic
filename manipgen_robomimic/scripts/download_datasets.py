@@ -1,6 +1,6 @@
 """
 Script to download datasets packaged with the repository. By default, all
-datasets will be stored at robomimic/datasets, unless the @download_dir
+datasets will be stored at manipgen_robomimic/datasets, unless the @download_dir
 argument is supplied. We recommend using the default, as most examples that
 use these datasets assume that they can be found there.
 
@@ -148,7 +148,7 @@ if __name__ == "__main__":
                             if url is None:
                                 print(
                                     "Skipping {}-{}-{}, no url for dataset exists.".format(task, dataset_type, hdf5_type)
-                                    + " Create this dataset locally by running the appropriate command from robomimic/scripts/extract_obs_from_raw_datasets.sh."
+                                    + " Create this dataset locally by running the appropriate command from manipgen_robomimic/scripts/extract_obs_from_raw_datasets.sh."
                                 )
                                 continue
                             if args.dry_run:

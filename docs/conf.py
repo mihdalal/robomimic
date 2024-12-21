@@ -39,7 +39,7 @@ extensions = [
 
 
 # Sphinx-apidoc variables
-apidoc_module_dir = "../robomimic"
+apidoc_module_dir = "../manipgen_robomimic"
 apidoc_output_dir = "reference"
 
 
@@ -58,9 +58,9 @@ source_suffix = ['.rst', '.md', '.ipynb']
 master_doc = 'index'
 
 # General information about the project.
-project = 'robomimic'
-copyright = 'the robomimic core team, 2023'
-author = 'the robomimic core team'
+project = 'manipgen_robomimic'
+copyright = 'the manipgen_robomimic core team, 2023'
+author = 'the manipgen_robomimic core team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -98,7 +98,7 @@ todo_include_todos = False
 # a list of builtin themes.
 #
 html_theme = 'sphinx_book_theme'
-html_logo = "robomimic_logo.png"
+html_logo = "manipgen_robomimic_logo.png"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -120,7 +120,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'robomimicdoc'
+htmlhelp_basename = 'manipgen_robomimicdoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -147,7 +147,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'robomimic.tex', u'robomimic Documentation', author, 'manual'),
+    (master_doc, 'manipgen_robomimic.tex', u'manipgen_robomimic Documentation', author, 'manual'),
 ]
 
 
@@ -156,7 +156,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'robomimic', u'robomimic Documentation',
+    (master_doc, 'manipgen_robomimic', u'manipgen_robomimic Documentation',
      [author], 1)
 ]
 
@@ -167,7 +167,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'robomimic', u'robomimic Documentation',
-     author, 'robomimic', 'ARISE',
+    (master_doc, 'manipgen_robomimic', u'manipgen_robomimic Documentation',
+     author, 'manipgen_robomimic', 'ARISE',
      'Miscellaneous'),
 ]

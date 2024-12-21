@@ -1,6 +1,6 @@
-# robomimic-v0.1
+# manipgen_robomimic-v0.1
 
-We provide links below to several pretrained models that were trained with robomimic-v0.1 for our CoRL 2021 study. All success rates listed below are approximate - they may vary.
+We provide links below to several pretrained models that were trained with manipgen_robomimic-v0.1 for our CoRL 2021 study. All success rates listed below are approximate - they may vary.
 
 <div class="admonition note">
 <p class="admonition-title">Note: see tutorial on using these models</p>
@@ -10,9 +10,9 @@ See the ["Using Pretrained Models"](../tutorials/using_pretrained_models.html) t
 </div>
 
 <div class="admonition warning">
-<p class="admonition-title">Warning: use correct robomimic and robosuite versions!</p>
+<p class="admonition-title">Warning: use correct manipgen_robomimic and robosuite versions!</p>
 
-When using these trained models, please make sure that robosuite is on the [`offline_study` branch](https://github.com/ARISE-Initiative/robosuite/tree/offline_study), and that robomimic is on the [`v0.1` branch](https://github.com/ARISE-Initiative/robomimic/tree/v0.1).
+When using these trained models, please make sure that robosuite is on the [`offline_study` branch](https://github.com/ARISE-Initiative/robosuite/tree/offline_study), and that manipgen_robomimic is on the [`v0.1` branch](https://github.com/ARISE-Initiative/manipgen_robomimic/tree/v0.1).
 
 </div>
 

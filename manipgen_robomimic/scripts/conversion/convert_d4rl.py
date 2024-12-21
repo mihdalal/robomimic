@@ -19,7 +19,7 @@ Args:
 
 Example usage:
 
-    # downloads to default path at robomimic/datasets/d4rl
+    # downloads to default path at manipgen_robomimic/datasets/d4rl
     python convert_d4rl.py --env walker2d-medium-expert-v2
 
     # download to custom path
