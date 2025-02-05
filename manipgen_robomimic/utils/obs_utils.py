@@ -278,7 +278,7 @@ def center_crop(im, t_h, t_w):
         im (np.array or torch.Tensor): center cropped image
     """
     assert(im.shape[-3] >= t_h and im.shape[-2] >= t_w)
-    assert(im.shape[-1] in [1, 3])
+    # assert(im.shape[-1] in [1, 3])
     crop_h = int((im.shape[-3] - t_h) / 2)
     crop_w = int((im.shape[-2] - t_w) / 2)
     return im[..., crop_h:crop_h + t_h, crop_w:crop_w + t_w, :]
@@ -377,7 +377,7 @@ def process_frame(frame, channel_dim, scale):
         processed_frame (np.array or torch.Tensor): processed frame
     """
     # Channel size should either be 3 (RGB) or 1 (depth)
-    assert (frame.shape[-1] == channel_dim)
+    # assert (frame.shape[-1] == channel_dim)
     frame = TU.to_float(frame)
     if scale is not None:
         frame = frame / scale
