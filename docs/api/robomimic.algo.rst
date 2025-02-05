@@ -1,77 +1,77 @@
-robomimic.algo package
+manipgen_robomimic.algo package
 ======================
 
 Submodules
 ----------
 
-robomimic.algo.algo module
+manipgen_robomimic.algo.algo module
 --------------------------
 
-.. automodule:: robomimic.algo.algo
+.. automodule:: manipgen_robomimic.algo.algo
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.algo.bc module
+manipgen_robomimic.algo.bc module
 ------------------------
 
-.. automodule:: robomimic.algo.bc
+.. automodule:: manipgen_robomimic.algo.bc
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.algo.bcq module
+manipgen_robomimic.algo.bcq module
 -------------------------
 
-.. automodule:: robomimic.algo.bcq
+.. automodule:: manipgen_robomimic.algo.bcq
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.algo.cql module
+manipgen_robomimic.algo.cql module
 -------------------------
 
-.. automodule:: robomimic.algo.cql
+.. automodule:: manipgen_robomimic.algo.cql
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.algo.gl module
+manipgen_robomimic.algo.gl module
 ------------------------
 
-.. automodule:: robomimic.algo.gl
+.. automodule:: manipgen_robomimic.algo.gl
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.algo.hbc module
+manipgen_robomimic.algo.hbc module
 -------------------------
 
-.. automodule:: robomimic.algo.hbc
+.. automodule:: manipgen_robomimic.algo.hbc
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.algo.iql module
+manipgen_robomimic.algo.iql module
 -------------------------
 
-.. automodule:: robomimic.algo.iql
+.. automodule:: manipgen_robomimic.algo.iql
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.algo.iris module
+manipgen_robomimic.algo.iris module
 --------------------------
 
-.. automodule:: robomimic.algo.iris
+.. automodule:: manipgen_robomimic.algo.iris
    :members:
    :undoc-members:
    :show-inheritance:
 
-robomimic.algo.td3\_bc module
+manipgen_robomimic.algo.td3\_bc module
 -----------------------------
 
-.. automodule:: robomimic.algo.td3_bc
+.. automodule:: manipgen_robomimic.algo.td3_bc
    :members:
    :undoc-members:
    :show-inheritance:
@@ -79,7 +79,7 @@ robomimic.algo.td3\_bc module
 Module contents
 ---------------
 
-.. automodule:: robomimic.algo
+.. automodule:: manipgen_robomimic.algo
    :members:
    :undoc-members:
    :show-inheritance:

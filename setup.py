@@ -11,9 +11,9 @@ lines = [x for x in lines if (('.png' not in x) and ('.gif' not in x))]
 long_description = ''.join(lines)
 
 setup(
-    name="robomimic",
+    name="manipgen_robomimic",
     packages=[
-        package for package in find_packages() if package.startswith("robomimic")
+        package for package in find_packages() if package.startswith("manipgen_robomimic")
     ],
     install_requires=[
         "numpy>=1.13.3",
@@ -33,9 +33,9 @@ setup(
     eager_resources=['*'],
     include_package_data=True,
     python_requires='>=3',
-    description="robomimic: A Modular Framework for Robot Learning from Demonstration",
+    description="manipgen_robomimic: A Modular Framework for Robot Learning from Demonstration",
     author="Ajay Mandlekar, Danfei Xu, Josiah Wong, Soroush Nasiriany, Chen Wang, Matthew Bronars",
-    url="https://github.com/ARISE-Initiative/robomimic",
+    url="https://github.com/ARISE-Initiative/manipgen_robomimic",
     author_email="amandlek@cs.stanford.edu",
     version="0.3.0",
     long_description=long_description,

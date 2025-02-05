@@ -1,6 +1,6 @@
 # SequenceDataset
 
-The `robomimic.utils.dataset.SequenceDataset` class extends PyTorch's default `torch.utils.data.Dataset` to interface with our demonstration [datasets](../datasets/overview.html). The class supports accessing demonstration sub-sequences (as opposed to individual states) by index and both on-demand fetching and in-memory caching. This page walks through the key concepts of the `SequenceDataset` interface. Please refer to the official PyTorch [documentation](https://pytorch.org/docs/stable/data.html) and a short [example](https://github.com/ARISE-Initiative/robomimic/blob/master/examples/simple_train_loop.py) on how to use the `Dataset` and `DataLoader` interfaces to build a training pipeline.
+The `manipgen_robomimic.utils.dataset.SequenceDataset` class extends PyTorch's default `torch.utils.data.Dataset` to interface with our demonstration [datasets](../datasets/overview.html). The class supports accessing demonstration sub-sequences (as opposed to individual states) by index and both on-demand fetching and in-memory caching. This page walks through the key concepts of the `SequenceDataset` interface. Please refer to the official PyTorch [documentation](https://pytorch.org/docs/stable/data.html) and a short [example](https://github.com/ARISE-Initiative/manipgen_robomimic/blob/master/examples/simple_train_loop.py) on how to use the `Dataset` and `DataLoader` interfaces to build a training pipeline.
 
 
 Here is a sample dataset object:

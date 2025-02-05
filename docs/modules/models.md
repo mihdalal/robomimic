@@ -4,14 +4,14 @@
   <img width="100.0%" src="../images/modules.png">
  </p>
 
-**robomimic** implements a suite of reusable network modules at different abstraction levels that make creating new policy models easy. 
+**manipgen_robomimic** implements a suite of reusable network modules at different abstraction levels that make creating new policy models easy. 
 
 
 ## Base Modules
-To support automated shape resolution when dealing with multiple modalities, all basic modules such as MLP and ConvNets defined in `robomimic.models.base_nets` are a subclass of `robomimic.models.base_nets.Module`, which requires implementing the abstract method `output_shape(self, input_shape=None)`. The function resolves the output shape (excluding the batch dimension) of the module either based on an external `input_shape` or internal instance variables. To implement new base modules, simply inherit `robomimic.models.Module` or `robomimic.models.ConvBase` (if adding a ConvNet) and implement the abstract functions. Below is a sample implementation of a ResNet-18 base module.
+To support automated shape resolution when dealing with multiple modalities, all basic modules such as MLP and ConvNets defined in `manipgen_robomimic.models.base_nets` are a subclass of `manipgen_robomimic.models.base_nets.Module`, which requires implementing the abstract method `output_shape(self, input_shape=None)`. The function resolves the output shape (excluding the batch dimension) of the module either based on an external `input_shape` or internal instance variables. To implement new base modules, simply inherit `manipgen_robomimic.models.Module` or `manipgen_robomimic.models.ConvBase` (if adding a ConvNet) and implement the abstract functions. Below is a sample implementation of a ResNet-18 base module.
 
 ```python
-from robomimic.models.base_nets import ConvBase
+from manipgen_robomimic.models.base_nets import ConvBase
 
 class ResNet18Conv(ConvBase):
 
@@ -36,14 +36,14 @@ class ResNet18Conv(ConvBase):
 ```
 
 ## EncoderCore
-We create the `EncoderCore` abstract class to encapsulate any network intended to encode a specific type of observation modality (e.g.: `VisualCore` for RGB and depth observations, and `ScanCore` for range scanner observations. See below for descriptions of both!). When a new encoder class is subclassed from `EncoderCore`, it will automatically be registered internally in robomimic, allowing the user to directly refer to their custom encoder classes in their config in string form. For example, if the user specifies a custom `EncoderCore`-based class named `MyCustomRGBEncoder` to encode RGB observations, they can directly set this in their config:
+We create the `EncoderCore` abstract class to encapsulate any network intended to encode a specific type of observation modality (e.g.: `VisualCore` for RGB and depth observations, and `ScanCore` for range scanner observations. See below for descriptions of both!). When a new encoder class is subclassed from `EncoderCore`, it will automatically be registered internally in manipgen_robomimic, allowing the user to directly refer to their custom encoder classes in their config in string form. For example, if the user specifies a custom `EncoderCore`-based class named `MyCustomRGBEncoder` to encode RGB observations, they can directly set this in their config:
 
 ```python
 config.observation.encoder.rgb.core_class = "MyCustomRGBEncoder"
 config.observation.encoder.rgb.core_kwargs = ...
 ```
 
-Any corresponding keyword arguments that should be passed to the encoder constructor should be specified in `core_kwargs` in the config. For more information on creating your own custom encoder, please see our [example script](https://github.com/ARISE-Initiative/robomimic/blob/master/examples/simple_obs_nets.py).
+Any corresponding keyword arguments that should be passed to the encoder constructor should be specified in `core_kwargs` in the config. For more information on creating your own custom encoder, please see our [example script](https://github.com/ARISE-Initiative/manipgen_robomimic/blob/master/examples/simple_obs_nets.py).
 
 Below, we provide descriptions of specific EncoderCore-based classes used to encode RGB and depth observations (`VisualCore`) and range scanner observations (`ScanCore`).
 
@@ -52,8 +52,8 @@ Below, we provide descriptions of specific EncoderCore-based classes used to enc
 We provide a `VisualCore` module for constructing custom vision architectures. A `VisualCore` consists of a backbone network that featurizes image input --- typically a `ConvBase` module --- and a pooling module that reduces the feature tensor into a fixed-sized vector representation.  Below is a `VisualCore` built from a `ResNet18Conv` backbone and a `SpatialSoftmax` ([paper](https://rll.berkeley.edu/dsae/dsae.pdf)) pooling module. 
 
 ```python
-from robomimic.models.obs_core import VisualCore
-from robomimic.models.base_nets import ResNet18Conv, SpatialSoftmax
+from manipgen_robomimic.models.obs_core import VisualCore
+from manipgen_robomimic.models.base_nets import ResNet18Conv, SpatialSoftmax
 
 vis_net = VisualCore(
   input_shape=(3, 224, 224),
@@ -73,8 +73,8 @@ New vision backbone and pooling classes can be added by subclassing `ConvBase`.
 We provide a `ScanCore` module for constructing custom range finder architectures. `ScanCore` consists of a 1D Convolution backbone network (`Conv1dBase`) that featurizes a high-dimensional 1D input, and a pooling module that reduces the feature tensor into a fixed-sized vector representation.  Below is an example of a `ScanCore` network with a `SpatialSoftmax` ([paper](https://rll.berkeley.edu/dsae/dsae.pdf)) pooling module.
 
 ```python
-from robomimic.models.obs_core import ScanCore
-from robomimic.models.base_nets import SpatialSoftmax
+from manipgen_robomimic.models.obs_core import ScanCore
+from manipgen_robomimic.models.base_nets import SpatialSoftmax
 
 vis_net = ScanCore(
   input_shape=(1, 120),
@@ -100,15 +100,15 @@ Randomizers are `Modules` that perturb network inputs during training, and optio
 
 `Randomizer` modules are intended to be used alongside an `ObservationEncoder` --- see the next section for more details. Additional randomizer classes can be implemented by subclassing the `Randomizer` class and implementing the necessary abstract functions. 
 
-**Visualizing randomized input:** To visualize the original and randomized image input, set `VISUALIZE_RANDOMIZER = True` in `robomimic/macros.py`
+**Visualizing randomized input:** To visualize the original and randomized image input, set `VISUALIZE_RANDOMIZER = True` in `manipgen_robomimic/macros.py`
 
 ## Observation Encoder and Decoder
  `ObservationEncoder` and `ObservationDecoder` are basic building blocks for dealing with observation dictionary inputs and outputs. They are designed to take in multiple streams of observation modalities as input (e.g. a dictionary containing images and robot proprioception signals), and output a dictionary of predictions like actions and subgoals. Below is an example of how to manually create an `ObservationEncoder` instance by registering observation modalities with the `register_obs_key` function.
 
 ```python
-from robomimic.models.base_nets import MLP
-from robomimic.models.obs_core import VisualCore, CropRandomizer
-from robomimic.models.obs_nets import ObservationEncoder, ObservationDecoder
+from manipgen_robomimic.models.base_nets import MLP
+from manipgen_robomimic.models.obs_core import VisualCore, CropRandomizer
+from manipgen_robomimic.models.obs_nets import ObservationEncoder, ObservationDecoder
 
 obs_encoder = ObservationEncoder(feature_activation=torch.nn.ReLU)
 
@@ -151,7 +151,7 @@ obs_encoder.register_obs_key(
 
 By default, each modality network should reduce an input observation stream to a fixed-size vector. The output of the `forward` function of the `ObservationEncoder` is simply the concatenation of all the vectors. The order of concatenation is deterministic and is the the same as the order that the modalities are registered. `ObservationGroupEncoder` further supports encoding nested groups of observations, e.g., `obs`, `goal`, and `subgoal`. This allows constructing goal-conditioned and / or subgoal-conditioned policy models.
 
-However, it can be tedious to enumerate all modalities when creating a policy model. The standard entry point to create an `ObservationEncoder` is via the `observation_encoder_factory` function in `robomimic.models.obs_nets`. It will enumerate all observation modalities and initialize all modality networks according to the configurations provided by the `config.observation` config section.
+However, it can be tedious to enumerate all modalities when creating a policy model. The standard entry point to create an `ObservationEncoder` is via the `observation_encoder_factory` function in `manipgen_robomimic.models.obs_nets`. It will enumerate all observation modalities and initialize all modality networks according to the configurations provided by the `config.observation` config section.
 
 The `ObservationDecoder` class is relatively straightforward. It's simply a single-input, multi-output-head MLP. For example, the following snippet creates an `ObservationDecoder` that takes the output of the observation encoder as input and outputs two action predictions.
 
@@ -174,7 +174,7 @@ See `examples/simple_obs_nets.py` for the complete example that shows additional
 
 ## Implemented Policy Networks
 
-These networks take an observation dictionary as input (and possibly additional conditioning, such as subgoal or goal dictionaries) and produce action predictions, samples, or distributions as outputs. Note that actions are assumed to lie in `[-1, 1]`, and most networks will have a final `tanh` activation to help ensure that outputs lie within this range. See `robomimic/models/policy_nets.py` for complete implementations.
+These networks take an observation dictionary as input (and possibly additional conditioning, such as subgoal or goal dictionaries) and produce action predictions, samples, or distributions as outputs. Note that actions are assumed to lie in `[-1, 1]`, and most networks will have a final `tanh` activation to help ensure that outputs lie within this range. See `manipgen_robomimic/models/policy_nets.py` for complete implementations.
 
 ### ActorNetwork
 - A basic policy network that predicts actions from observations. Can optionally be goal conditioned on future observations.
@@ -192,14 +192,14 @@ These networks take an observation dictionary as input (and possibly additional 
 - A VAE that models a distribution of actions conditioned on observations. The VAE prior and decoder are used at test-time as the policy.
 
 ## Implemented Value Networks
-These networks take an observation dictionary as input (and possibly additional conditioning, such as subgoal or goal dictionaries) and produce value or action-value estimates or distributions. See `robomimic/models/value_nets.py` for complete implementations.
+These networks take an observation dictionary as input (and possibly additional conditioning, such as subgoal or goal dictionaries) and produce value or action-value estimates or distributions. See `manipgen_robomimic/models/value_nets.py` for complete implementations.
 ### ValueNetwork
 - A basic value network that predicts values from observations. Can optionally be goal conditioned on future observations.
 ### DistributionalActionValueNetwork
 - Distributional Q (action-value) network that outputs a categorical distribution over a discrete grid of value atoms. See the [paper](https://arxiv.org/abs/1707.06887) for more details.
 
 ## Implemented VAEs
-The library implements a general VAE architecture and a number of prior distributions. See `robomimic/models/vae_nets.py` for complete implementations.
+The library implements a general VAE architecture and a number of prior distributions. See `manipgen_robomimic/models/vae_nets.py` for complete implementations.
 
 ### VAE
 A general Variational Autoencoder (VAE) implementation, as described in this [paper](https://arxiv.org/abs/1312.6114).

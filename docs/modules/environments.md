@@ -1,6 +1,6 @@
 # Environments
 
-**robomimic** interfaces trained policy models with standard simulated environments such as [robosuite](https://robosuite.ai/) and [OpenAI-Gym](https://gym.openai.com/) through a standardized wrapper class. The base wrapper is located at `envs.env_base`. The standard entry point for creating an environment is through the `create_env_from_metadata` function located at `robomimic.utils.env_utils`:
+**manipgen_robomimic** interfaces trained policy models with standard simulated environments such as [robosuite](https://robosuite.ai/) and [OpenAI-Gym](https://gym.openai.com/) through a standardized wrapper class. The base wrapper is located at `envs.env_base`. The standard entry point for creating an environment is through the `create_env_from_metadata` function located at `manipgen_robomimic.utils.env_utils`:
 
 ```python
 def create_env_from_metadata(
@@ -48,18 +48,18 @@ def create_env_from_metadata(
 
 `env_meta` is a dictionary containing three keys: `'env_name'`, `'type'`, and `'env_kwargs'`. 
 - `env_name` specifies the unique identifier of the environment. For example, in `EnvGym`, `env_name` is the full environment name such as `Hopper-v2`. 
-- `type` is an enum defined in `robomimicenvs.env_base.EnvType` that specifies the type of environment. `type` is mainly used by the `robomimic.utils.env_utils.get_env_class()` function to look up the correct environment wrapper class.
-- `env_kwargs` specifies the keyword args that are required to initialize an environment. The `env_kwargs` will be passed to the constructor of the wrapped environment as keyword arguments through the `robomimic.utils.env_utils.create_env()` helper function.
+- `type` is an enum defined in `manipgen_robomimicenvs.env_base.EnvType` that specifies the type of environment. `type` is mainly used by the `manipgen_robomimic.utils.env_utils.get_env_class()` function to look up the correct environment wrapper class.
+- `env_kwargs` specifies the keyword args that are required to initialize an environment. The `env_kwargs` will be passed to the constructor of the wrapped environment as keyword arguments through the `manipgen_robomimic.utils.env_utils.create_env()` helper function.
 
-Although it is possible to manually specify the `env_meta` dictionary, the **robomimic** training pipeline reads the `env_meta` from the hdf5 dataset as an attribute. Please refer to the [Dataset section](../datasets/overview.html#dataset-structure) for more details on where the metadata is stored, and the `robomimic.utils.file_utils.get_env_metadata_from_dataset` function to see how it is loaded from the dataset at run-time.
+Although it is possible to manually specify the `env_meta` dictionary, the **manipgen_robomimic** training pipeline reads the `env_meta` from the hdf5 dataset as an attribute. Please refer to the [Dataset section](../datasets/overview.html#dataset-structure) for more details on where the metadata is stored, and the `manipgen_robomimic.utils.file_utils.get_env_metadata_from_dataset` function to see how it is loaded from the dataset at run-time.
 
 
 ## Initialize an Environment from a Dataset
 The demonstration dataset file should contain all necessary information to construct an environment. Here is standalone example for initializing a `EnvRobosuite` environment instance by reading environment metadata from the a dataset.
 
 ```python
-import robomimic.utils.env_utils as EnvUtils
-import robomimic.utils.file_utils as FileUtils
+import manipgen_robomimic.utils.env_utils as EnvUtils
+import manipgen_robomimic.utils.file_utils as FileUtils
 
 env_meta = FileUtils.get_env_metadata_from_dataset("path/to/the/dataset.hdf5")
 
@@ -72,9 +72,9 @@ env = EnvUtils.create_env_from_metadata(
 )
 ```
 
-The repo offers a simple utility tool `robomimic/scripts/get_dataset_info.py` to view the environment metadata included in a dataset. For example:
+The repo offers a simple utility tool `manipgen_robomimic/scripts/get_dataset_info.py` to view the environment metadata included in a dataset. For example:
 ```bash
-$ python robomimic/scripts/get_dataset_info.py --dataset path/to/the/dataset.hdf5
+$ python manipgen_robomimic/scripts/get_dataset_info.py --dataset path/to/the/dataset.hdf5
 
 ...
 
@@ -150,7 +150,7 @@ $ python robomimic/scripts/get_dataset_info.py --dataset path/to/the/dataset.hdf
 
 ## Implement an Environment Wrapper
 
-While we provide wrappers for [robosuite](https://robosuite.ai/) environments and  several standard [OpenAI-Gym](https://gym.openai.com/) environments, it is possible to implement your own wrapper for a new type of environment (for example, perhaps [PyBullet](https://pybullet.org/wordpress/)). This is useful if you have your own hdf5 dataset collected in this type of environment, and would like to conduct evaluation rollouts during the training process (note that no environment is needed if `config.experiment.rollout.enabled` is set to `False`). To do this, in addition to implementing a wrapper class by inheriting the `EnvBase` class, you will also need to (1) add a new environment type in the `robomimic.envs.env_base.EnvType` enum class and (2) modify `get_env_type()` and `get_env_class()` in `robomimic.utils.env_utils` to allow the environment class to be found automatically.
+While we provide wrappers for [robosuite](https://robosuite.ai/) environments and  several standard [OpenAI-Gym](https://gym.openai.com/) environments, it is possible to implement your own wrapper for a new type of environment (for example, perhaps [PyBullet](https://pybullet.org/wordpress/)). This is useful if you have your own hdf5 dataset collected in this type of environment, and would like to conduct evaluation rollouts during the training process (note that no environment is needed if `config.experiment.rollout.enabled` is set to `False`). To do this, in addition to implementing a wrapper class by inheriting the `EnvBase` class, you will also need to (1) add a new environment type in the `manipgen_robomimic.envs.env_base.EnvType` enum class and (2) modify `get_env_type()` and `get_env_class()` in `manipgen_robomimic.utils.env_utils` to allow the environment class to be found automatically.
 
 Below we outline important methods that each `EnvBase` subclass needs to implement or override. The implementation mostly follows the OpenAI-Gym convention.
 
@@ -167,9 +167,9 @@ Below we outline important methods that each `EnvBase` subclass needs to impleme
 - `is_success(self)`
   - Check if the task condition(s) is reached. Should return a dictionary { str: bool } with at least a "task" key for the overall task success, and additional optional keys corresponding to other task criteria.
 - `serialize(self)`
-  - Aggregate and return all information needed to re-instantiate this environment in a dictionary. This is the same as @env_meta - environment metadata stored in hdf5 datasets and used in `robomimic/utils/env_utils.py`.
+  - Aggregate and return all information needed to re-instantiate this environment in a dictionary. This is the same as @env_meta - environment metadata stored in hdf5 datasets and used in `manipgen_robomimic/utils/env_utils.py`.
 - `create_for_data_processing(cls, ...)`
-  - (Optional) A class method that initialize an environment for data-postprocessing purposes, which includes extracting observations, labeling dense / sparse rewards, and annotating dones in transitions. This function should at least designate the list of observation modalities that are image / low-dimensional observations by calling `robomimic.utils.obs_utils.initialize_obs_utils_with_obs_specs()`. 
+  - (Optional) A class method that initialize an environment for data-postprocessing purposes, which includes extracting observations, labeling dense / sparse rewards, and annotating dones in transitions. This function should at least designate the list of observation modalities that are image / low-dimensional observations by calling `manipgen_robomimic.utils.obs_utils.initialize_obs_utils_with_obs_specs()`. 
 - `get_goal(self)`
   - (Optional) Get goal for a goal-conditional task
 - `set_goal(self, goal)`

@@ -1,6 +1,6 @@
 # Implemented Algorithms
 
-**robomimic** includes several high-quality implementations of offline learning algorithms, and offers tools to easily build [your own learning algorithms](../tutorials/custom_algorithms.html).
+**manipgen_robomimic** includes several high-quality implementations of offline learning algorithms, and offers tools to easily build [your own learning algorithms](../tutorials/custom_algorithms.html).
 ## Imitation Learning
 
 ### BC

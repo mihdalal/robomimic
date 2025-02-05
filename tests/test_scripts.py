@@ -10,15 +10,15 @@ import torch
 from collections import OrderedDict
 from termcolor import colored
 
-import robomimic
-import robomimic.utils.test_utils as TestUtils
-import robomimic.utils.torch_utils as TorchUtils
-from robomimic.config import Config
-from robomimic.utils.log_utils import silence_stdout
-from robomimic.utils.torch_utils import dummy_context_mgr
-from robomimic.scripts.train import train
-from robomimic.scripts.playback_dataset import playback_dataset
-from robomimic.scripts.run_trained_agent import run_trained_agent
+import manipgen_robomimic
+import manipgen_robomimic.utils.test_utils as TestUtils
+import manipgen_robomimic.utils.torch_utils as TorchUtils
+from manipgen_robomimic.config import Config
+from manipgen_robomimic.utils.log_utils import silence_stdout
+from manipgen_robomimic.utils.torch_utils import dummy_context_mgr
+from manipgen_robomimic.scripts.train import train
+from manipgen_robomimic.scripts.playback_dataset import playback_dataset
+from manipgen_robomimic.scripts.run_trained_agent import run_trained_agent
 
 
 def get_checkpoint_to_test():

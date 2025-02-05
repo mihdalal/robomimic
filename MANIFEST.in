@@ -1,8 +1,8 @@
-include robomimic/exps/templates/*.json
-include robomimic/scripts/*.py
-include robomimic/scripts/*.sh
-include robomimic/scripts/conversion/*.py
-include robomimic/scripts/conversion/*.sh
+include manipgen_robomimic/exps/templates/*.json
+include manipgen_robomimic/scripts/*.py
+include manipgen_robomimic/scripts/*.sh
+include manipgen_robomimic/scripts/conversion/*.py
+include manipgen_robomimic/scripts/conversion/*.sh
 recursive-include examples/ *.py
 recursive-include tests/ *.py
 recursive-include tests/ *.sh
